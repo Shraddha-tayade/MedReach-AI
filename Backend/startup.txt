@@ -1,0 +1,4 @@
+-----Packages to Install-----------
+npm init -y
+npm install express pg dotenv cors bcrypt jsonwebtoken
+npm install --save-dev nodemon
