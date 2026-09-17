@@ -1,0 +1,110 @@
+MEDREACH - PROJECT SETUP GUIDE
+`
+1. PREREQUISITES
+
+Install the following before starting:
+
+1. Node.js
+2. Git
+3. Visual Studio Code
+
+Check Node.js installation:
+
+node -v
+npm -v
+
+Check Git installation:
+
+git --version
+
+
+2. FRONTEND SETUP
+
+Go to the Frontend folder:
+
+cd Frontend
+
+Install frontend dependencies:
+
+npm install
+
+3. FRONTEND TECHNOLOGIES / PACKAGES
+
+The frontend is developed using:
+
+- React.js
+- Vite
+- Tailwind CSS
+- React Router DOM
+
+React Router DOM was installed using:
+
+npm install react-router-dom
+
+Run the frontend:
+
+npm run dev
+
+Open the localhost URL shown in the terminal,
+for example:
+
+http://localhost:5173
+
+
+4. FRONTEND STRUCTURE
+
+
+Frontend/
+│
+├── public/
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── pages/
+│   │   └── user/
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── package.json
+├── vite.config.js
+└── ...
+
+5. CURRENT FRONTEND PAGES
+
+Landing Page
+Login Page
+Register Page
+Patient Dashboard
+Emergency Request Page
+
+Current patient flow:
+
+Landing
+↓
+Login / Register
+↓
+Patient Dashboard
+↓
+Create Emergency Request
+↓
+Select Required Resources
+↓
+Submit Emergency Request
+
+6. RUNNING THE FRONTEND
+
+Open terminal in VS Code.
+
+Go to Frontend:
+
+cd Frontend
+
+Install dependencies if required:
+
+npm install
+
+Start development server:
+
+npm run dev
+
+
