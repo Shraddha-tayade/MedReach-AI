@@ -112,12 +112,23 @@ function EmergencyRequest() {
           </div>
 
 
-          <Link
-            to="/user/dashboard"
-            className="inline-block mt-8 px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition"
-          >
-            Back to Dashboard
-          </Link>
+       <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
+
+  <Link
+    to="/user/request-tracking"
+    className="px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition text-center"
+  >
+    Track Request
+  </Link>
+
+  <Link
+    to="/user/dashboard"
+    className="px-8 py-3 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition text-center"
+  >
+    Back to Dashboard
+  </Link>
+
+</div>
 
         </div>
 

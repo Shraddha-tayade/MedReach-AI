@@ -109,47 +109,45 @@ function UserDashboard() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
             {/* Blood */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition">
+           <Link
+  to="/user/find-blood"
+  className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:border-red-200 transition"
+>
+  <div className="text-3xl mb-4">🩸</div>
 
-              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-2xl mb-5">
-                🩸
-              </div>
+  <h3 className="text-lg font-bold text-slate-900">
+    Find Blood
+  </h3>
 
-              <h4 className="text-lg font-semibold text-slate-900">
-                Find Blood
-              </h4>
+  <p className="text-sm text-slate-500 mt-2">
+    Search for available blood near your location.
+  </p>
 
-              <p className="text-sm text-slate-600 mt-2">
-                Search for available blood groups near you.
-              </p>
-
-              <button className="mt-5 text-red-600 font-semibold text-sm">
-                Search Blood →
-              </button>
-
-            </div>
+  <p className="text-sm text-red-600 font-semibold mt-4">
+    Find Blood →
+  </p>
+</Link>
 
 
             {/* Hospital */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition">
+            <Link
+            to="/user/find-hospital"
+            className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:border-red-200 transition"
+>
+  <div className="text-3xl mb-4">🏥</div>
 
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mb-5">
-                🏥
-              </div>
+  <h3 className="text-lg font-bold text-slate-900">
+    Find Hospital
+  </h3>
 
-              <h4 className="text-lg font-semibold text-slate-900">
-                Find Hospital
-              </h4>
+  <p className="text-sm text-slate-500 mt-2">
+    Find nearby hospitals and available medical resources.
+  </p>
 
-              <p className="text-sm text-slate-600 mt-2">
-                Find nearby verified hospitals and available resources.
-              </p>
-
-              <button className="mt-5 text-red-600 font-semibold text-sm">
-                Find Hospitals →
-              </button>
-
-            </div>
+  <p className="text-sm text-red-600 font-semibold mt-4">
+    Find Hospital →
+  </p>
+</Link>
 
 
             {/* ICU / Oxygen */}
