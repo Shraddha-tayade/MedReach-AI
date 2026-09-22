@@ -4,13 +4,13 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
-import UserDashboard from "./pages/user/UserDashboard";
-import EmergencyRequest from "./pages/user/EmergencyRequest";
-import RequestTracking from "./pages/user/RequestTracking";
-import FindBlood from "./pages/user/FindBlood";
-import BloodRequest from "./pages/user/BloodRequest";
-import FindHospital from "./pages/user/FindHospital";
-import HospitalDetails from "./pages/user/HospitalDetails";
+import UserDashboard from "./pages/user/dashboard/UserDashboard";
+import EmergencyRequest from "./pages/user/dashboard/EmergencyRequest";
+import RequestTracking from "./pages/user/dashboard/RequestTracking";
+import FindBlood from "./pages/user/dashboard/FindBlood";
+import BloodRequest from "./pages/user/dashboard/BloodRequest";
+import FindHospital from "./pages/user/dashboard/FindHospital";
+import HospitalDetails from "./pages/user/dashboard/HospitalDetails";
 
 function App() {
   return (
