@@ -14,6 +14,7 @@ pool.connect()
     })
     .catch((err) => {
         console.error("Database connection failed:", err.message);
+        console.log("dtabase url exist",!!process.env.DATABASE_URL);
     });
 
 module.exports = pool;

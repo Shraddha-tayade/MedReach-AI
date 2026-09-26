@@ -132,29 +132,33 @@ function Landing() {
           {/* Cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
-            <FeatureCard
-              icon="🩸"
-              title="Find Blood"
-              description="Find available blood resources and compatible donors nearby."
-            />
+          <FeatureCard
+  icon="🩸"
+  title="Find Blood"
+  description="Find available blood resources and compatible donors nearby."
+  link="/user/find-blood"
+/>
 
-            <FeatureCard
-              icon="🏥"
-              title="Find Hospitals"
-              description="Discover verified hospitals and check available medical resources."
-            />
+<FeatureCard
+  icon="🏥"
+  title="Find Hospitals"
+  description="Discover verified hospitals and check available medical resources."
+  link="/user/find-hospital"
+/>
 
-            <FeatureCard
-              icon="🚑"
-              title="Find Ambulance"
-              description="Connect with available ambulances for emergency transportation."
-            />
+<FeatureCard
+  icon="🚑"
+  title="Find Ambulance"
+  description="Connect with available ambulances for emergency transportation."
+  link="/user/find-ambulance"
+/>
 
-            <FeatureCard
-              icon="🚨"
-              title="Emergency Coordination"
-              description="Create one emergency request for multiple critical resources."
-            />
+<FeatureCard
+  icon="🚨"
+  title="Emergency Coordination"
+  description="Create one emergency request for multiple critical resources."
+  link="/user/emergency"
+/>
 
           </div>
 

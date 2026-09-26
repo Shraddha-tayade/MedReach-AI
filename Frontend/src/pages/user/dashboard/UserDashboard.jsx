@@ -150,48 +150,54 @@ function UserDashboard() {
 </Link>
 
 
-            {/* ICU / Oxygen */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition">
+           {/* ICU / Oxygen */}
+<Link
+  to="/user/resources"
+  className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-red-200 transition"
+>
 
-              <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl mb-5">
-                🫁
-              </div>
+  <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl mb-5">
+    🫁
+  </div>
 
-              <h4 className="text-lg font-semibold text-slate-900">
-                ICU & Oxygen
-              </h4>
+  <h4 className="text-lg font-semibold text-slate-900">
+    ICU & Oxygen
+  </h4>
 
-              <p className="text-sm text-slate-600 mt-2">
-                Check available ICU beds and oxygen resources.
-              </p>
+  <p className="text-sm text-slate-600 mt-2">
+    Check available ICU beds and oxygen resources.
+  </p>
 
-              <button className="mt-5 text-red-600 font-semibold text-sm">
-                Find Resources →
-              </button>
+  <p className="mt-5 text-red-600 font-semibold text-sm">
+    Find Resources →
+  </p>
 
-            </div>
+</Link>
 
 
-            {/* Ambulance */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition">
+        {/* Ambulance */}
+<Link
+  to="/user/find-ambulance"
+  className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-red-200 transition"
+>
 
-              <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl mb-5">
-                🚑
-              </div>
+  <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl mb-5">
+    🚑
+  </div>
 
-              <h4 className="text-lg font-semibold text-slate-900">
-                Find Ambulance
-              </h4>
+  <h4 className="text-lg font-semibold text-slate-900">
+    Find Ambulance
+  </h4>
 
-              <p className="text-sm text-slate-600 mt-2">
-                Find available ambulances for emergency transportation.
-              </p>
+  <p className="text-sm text-slate-600 mt-2">
+    Find available ambulances for emergency transportation.
+  </p>
 
-              <button className="mt-5 text-red-600 font-semibold text-sm">
-                Find Ambulance →
-              </button>
+  <p className="mt-5 text-red-600 font-semibold text-sm">
+    Find Ambulance →
+  </p>
 
-            </div>
+</Link>
 
           </div>
 
@@ -207,9 +213,12 @@ function UserDashboard() {
               Active Requests
             </h3>
 
-            <button className="text-red-600 text-sm font-semibold">
-              View All
-            </button>
+            <Link
+  to="/user/active-requests"
+  className="text-red-600 text-sm font-semibold hover:text-red-700 transition"
+>
+  View All
+</Link>
 
           </div>
 
