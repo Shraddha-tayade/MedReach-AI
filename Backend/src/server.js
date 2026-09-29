@@ -5,12 +5,16 @@ require("dotenv").config();
 require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const authenticateToken = require("./middleware/authMiddleware");
+const routePath = require.resolve("./routes/profilesRoutes");
+
+const profilesRoutes = require("./routes/profilesRoutes");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profilesRoutes);
 
 app.get("/", (req, res) => {
     res.json({
