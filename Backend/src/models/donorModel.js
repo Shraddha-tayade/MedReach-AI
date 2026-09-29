@@ -1,64 +1,68 @@
 const pool = require("../config/db");
 
-const createUser = async (
+const createDonor = async (
     name,
     email,
     phone,
     password,
+    bloodGroup,
+    dateOfBirth,
+    profilePicture,
     addressLine,
     city,
     state,
-    pincode,
-    dateOfBirth,
-    profilePicture
+    pincode
 ) => {
     const result = await pool.query(
-        `INSERT INTO users
+        `INSERT INTO donors
         (
             name,
             email,
             phone,
             password,
+            blood_group,
+            date_of_birth,
+            profile_picture,
             address_line,
             city,
             state,
-            pincode,
-            date_of_birth,
-            profile_picture
+            pincode
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING
             id,
             name,
             email,
             phone,
+            blood_group,
+            date_of_birth,
+            profile_picture,
             address_line,
             city,
             state,
             pincode,
-            date_of_birth,
-            profile_picture,
             created_at`,
         [
             name,
             email,
             phone,
             password,
+            bloodGroup,
+            dateOfBirth,
+            profilePicture,
             addressLine,
             city,
             state,
-            pincode,
-            dateOfBirth,
-            profilePicture
+            pincode
         ]
     );
 
     return result.rows[0];
 };
 
-const findUserByEmail = async (email) => {
+const findDonorByEmail = async (email) => {
     const result = await pool.query(
-        `SELECT * FROM users WHERE email = $1`,
+        `SELECT * FROM donors WHERE email = $1`,
         [email]
     );
 
@@ -66,6 +70,6 @@ const findUserByEmail = async (email) => {
 };
 
 module.exports = {
-    createUser,
-    findUserByEmail
+    createDonor,
+    findDonorByEmail
 };
