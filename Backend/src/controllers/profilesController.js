@@ -11,7 +11,7 @@ const updateProfile = async (req, res) => {
     try {
 
         const id = req.user.id;
-        const role = req.user.role;
+        const role = req.user.type.toLowerCase();
 
         const {
             name,

@@ -1,22 +1,27 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-require("./config/db");
 
+require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const authenticateToken = require("./middleware/authMiddleware");
-const routePath = require.resolve("./routes/profilesRoutes");
 
 const profilesRoutes = require("./routes/profilesRoutes");
+const bloodInventoryRoutes = require("./routes/bloodInventoryRoutes");
 
-const locationRoutes = require("./routes/locationRoutes");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/location", locationRoutes);
+app.use(cors());
+app.use(express.json());
+
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profilesRoutes);
+app.use("/api/blood-bank/inventory", bloodInventoryRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profilesRoutes);
+app.use("/api/blood-bank/inventory", bloodInventoryRoutes);
 
 app.get("/", (req, res) => {
     res.json({
@@ -31,7 +36,6 @@ app.get("/api/protected", authenticateToken, (req, res) => {
         user: req.user
     });
 });
-
 
 const PORT = process.env.PORT || 5000;
 
