@@ -4,6 +4,16 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
+
+
+import DonorDashboard from "./pages/Donor/DonorDashboard";
+import DonorRequestDetails from "./pages/Donor/DonorRequestDetails";
+import DonorAccepted from "./pages/Donor/DonorAccepted";
+import DonationHistory from "./pages/Donor/DonationHistory";
+import DonorProfile from "./pages/Donor/DonorProfile";
+import DonorNotifications from "./pages/Donor/DonorNotifications";
+import DonorSettings from "./pages/Donor/DonorSettings";
+
 import UserDashboard from "./pages/user/dashboard/UserDashboard";
 
 import EmergencyRequest from "./pages/user/dashboard/emergency/EmergencyRequest";
@@ -36,6 +46,16 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        <Route path="/Donor/dashboard" element={<DonorDashboard />} />
+        <Route path="/Donor/request-details" element={<DonorRequestDetails />} />
+        <Route path="/Donor/accepted" element={<DonorAccepted />} />
+        <Route path="/Donor/donation-history" element={<DonationHistory />} />
+        <Route path="/Donor/profile" element={<DonorProfile />} />
+        <Route path="/Donor/notifications" element={<DonorNotifications />} />
+        <Route path="/Donor/settings" element={<DonorSettings />} />
+
+
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/user/emergency" element={<EmergencyRequest />} />
         <Route path="/user/request-tracking" element={<RequestTracking />}/>
