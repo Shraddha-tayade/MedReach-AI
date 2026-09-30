@@ -1,15 +1,84 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function FindHospital() {
+  const [hospitalType, setHospitalType] = useState("");
+  const [radius, setRadius] = useState("");
+
+  const [location, setLocation] = useState("");
+  const [locationMode, setLocationMode] = useState("manual");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  const [searched, setSearched] = useState(false);
+
+  const useCurrentLocation = () => {
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError(
+        "Location detection is not supported by your browser."
+      );
+      return;
+    }
+
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+
+        setLocationMode("current");
+        setLocation("");
+        setLocationLoading(false);
+      },
+      () => {
+        setLocationLoading(false);
+        setLocationError(
+          "Unable to access your location. Please allow location permission or enter your location manually."
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  const handleManualLocation = (e) => {
+    setLocation(e.target.value);
+    setLocationMode("manual");
+
+    setLatitude(null);
+    setLongitude(null);
+    setLocationError("");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    setSearched(true);
+
+    // Later backend can receive:
+    // latitude, longitude, location, hospitalType, radius
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
 
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-6 lg:px-10 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
 
-          <Link to="/user/dashboard" className="flex items-center gap-2">
-
+          <Link
+            to="/user/dashboard"
+            className="flex items-center gap-2"
+          >
             <div className="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold">
               M
             </div>
@@ -17,7 +86,6 @@ function FindHospital() {
             <h1 className="text-2xl font-bold text-slate-900">
               Med<span className="text-red-600">Reach</span>
             </h1>
-
           </Link>
 
           <Link
@@ -30,39 +98,34 @@ function FindHospital() {
         </div>
       </header>
 
+      <main className="max-w-6xl mx-auto px-6 py-10">
 
-      {/* Main */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
-
-        {/* Heading */}
+        {/* Title */}
         <div className="mb-8">
-
-          <p className="text-sm font-medium text-red-600 mb-2">
-            Hospital Resources
+          <p className="text-red-600 font-semibold text-sm mb-2">
+            HOSPITAL SEARCH
           </p>
 
           <h2 className="text-3xl font-bold text-slate-900">
-            Find Hospital
+            Find Hospitals
           </h2>
 
-          <p className="text-slate-500 mt-2">
-            Find nearby verified hospitals and check available medical resources.
+          <p className="text-slate-600 mt-2">
+            Find nearby hospitals and available medical facilities.
           </p>
-
         </div>
 
+        {/* Search Card */}
+        <section className="bg-white rounded-2xl border border-slate-200 p-7">
 
-        {/* Search */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
-
-          <h3 className="text-xl font-bold text-slate-900 mb-5">
+          <h3 className="text-xl font-bold text-slate-900 mb-6">
             Search Hospitals
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <form onSubmit={handleSearch}>
 
             {/* Location */}
-            <div>
+            <div className="mb-7">
 
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Location
@@ -70,295 +133,135 @@ function FindHospital() {
 
               <input
                 type="text"
-                placeholder="Enter city or area"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500"
+                value={location}
+                onChange={handleManualLocation}
+                placeholder="Enter full location"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
               />
 
-            </div>
+              <p className="text-xs text-slate-400 mt-2">
+                Example: Pune, Maharashtra
+              </p>
 
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-slate-200"></div>
+                <span className="text-xs text-slate-400">or</span>
+                <div className="flex-1 h-px bg-slate-200"></div>
+              </div>
 
-            {/* Radius */}
-            <div>
-
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Search Radius
-              </label>
-
-              <select
-                defaultValue="10"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 bg-white"
+              <button
+                type="button"
+                onClick={useCurrentLocation}
+                disabled={locationLoading}
+                className={`w-full border rounded-xl p-4 text-left transition ${
+                  locationMode === "current"
+                    ? "border-green-500 bg-green-50"
+                    : "border-slate-200 hover:border-red-400 hover:bg-red-50"
+                }`}
               >
-                <option value="5">Within 5 km</option>
-                <option value="10">Within 10 km</option>
-                <option value="25">Within 25 km</option>
-                <option value="50">Within 50 km</option>
-              </select>
+                <div className="flex items-center gap-3">
+
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
+                      locationMode === "current"
+                        ? "bg-green-100"
+                        : "bg-red-50"
+                    }`}
+                  >
+                    {locationMode === "current" ? "✓" : "📍"}
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      {locationLoading
+                        ? "Detecting your location..."
+                        : locationMode === "current"
+                        ? "Current Location Detected"
+                        : "Use My Current Location"}
+                    </p>
+
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      {locationMode === "current"
+                        ? "Browser location selected"
+                        : "Let your browser detect your location"}
+                    </p>
+                  </div>
+
+                </div>
+              </button>
+
+              {locationError && (
+                <p className="text-sm text-red-600 mt-2">
+                  {locationError}
+                </p>
+              )}
 
             </div>
 
+            {/* Filters */}
+            <div className="grid md:grid-cols-2 gap-5">
 
-            {/* ICU */}
-            <div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Hospital Type
+                </label>
 
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                ICU Availability
-              </label>
+                <select
+                  value={hospitalType}
+                  onChange={(e) => setHospitalType(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <option value="">
+                    Select hospital type
+                  </option>
+                  <option>Government</option>
+                  <option>Private</option>
+                  <option>Multi-Specialty</option>
+                </select>
+              </div>
 
-              <select
-                defaultValue="any"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 bg-white"
-              >
-                <option value="any">Any</option>
-                <option value="yes">Available</option>
-                <option value="no">Not Available</option>
-              </select>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Search Radius
+                </label>
+
+                <select
+                  value={radius}
+                  onChange={(e) => setRadius(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <option value="">
+                    Select radius
+                  </option>
+                  <option value="5">Within 5 km</option>
+                  <option value="10">Within 10 km</option>
+                  <option value="25">Within 25 km</option>
+                  <option value="50">Within 50 km</option>
+                </select>
+              </div>
 
             </div>
-
-
-            {/* Oxygen */}
-            <div>
-
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Oxygen Availability
-              </label>
-
-              <select
-                defaultValue="any"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 bg-white"
-              >
-                <option value="any">Any</option>
-                <option value="yes">Available</option>
-                <option value="no">Not Available</option>
-              </select>
-
-            </div>
-
-          </div>
-
-
-          {/* Search Button */}
-          <div className="mt-5">
 
             <button
-              type="button"
-              className="w-full md:w-auto px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
+              type="submit"
+              className="w-full mt-6 py-3.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition"
             >
               Search Hospitals
             </button>
 
-          </div>
+          </form>
 
-        </div>
-
-
-        {/* Results Heading */}
-        <div className="flex items-center justify-between mb-5">
-
-          <div>
-
-            <h3 className="text-xl font-bold text-slate-900">
-              Nearby Hospitals
-            </h3>
-
-            <p className="text-sm text-slate-500 mt-1">
-              Showing verified hospitals near your selected location.
-            </p>
-
-          </div>
-
-          <span className="text-sm text-slate-500">
-            3 results
-          </span>
-
-        </div>
-
-
-        {/* Hospital 1 */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-4">
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-
-            <div className="flex items-start gap-4">
-
-              <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-2xl">
-                🏥
-              </div>
-
-              <div>
-
-                <h4 className="text-lg font-semibold text-slate-900">
-                  City Care Hospital
-                </h4>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  Amravati • 3.2 km away
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-3">
-
-                  <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
-                    ICU Available
-                  </span>
-
-                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-                    Oxygen Available
-                  </span>
-
-                  <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
-                    Verified
-                  </span>
-
-                </div>
-
-              </div>
-
+          {searched && (
+            <div className="mt-6 p-4 bg-slate-50 rounded-xl text-sm text-slate-600">
+              Hospital search submitted. Nearby hospitals will appear here.
             </div>
+          )}
 
-
-            <Link
-              to="/user/hospital-details"
-              className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition text-center"
-            >
-              View Details
-            </Link>
-
-          </div>
-
-        </div>
-
-
-        {/* Hospital 2 */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-4">
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-
-            <div className="flex items-start gap-4">
-
-              <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-2xl">
-                🏥
-              </div>
-
-              <div>
-
-                <h4 className="text-lg font-semibold text-slate-900">
-                  Lifeline Multispeciality Hospital
-                </h4>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  Amravati • 5.6 km away
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-3">
-
-                  <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
-                    ICU Available
-                  </span>
-
-                  <span className="px-3 py-1 bg-yellow-50 text-yellow-700 rounded-full text-sm font-medium">
-                    Limited Oxygen
-                  </span>
-
-                  <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
-                    Verified
-                  </span>
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-            <Link
-              to="/user/hospital-details"
-              className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition text-center"
-            >
-              View Details
-            </Link>
-
-          </div>
-
-        </div>
-
-
-        {/* Hospital 3 */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-
-            <div className="flex items-start gap-4">
-
-              <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-2xl">
-                🏥
-              </div>
-
-              <div>
-
-                <h4 className="text-lg font-semibold text-slate-900">
-                  Government General Hospital
-                </h4>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  Amravati • 8.4 km away
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-3">
-
-                  <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
-                    ICU Available
-                  </span>
-
-                  <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
-                    Oxygen Available
-                  </span>
-
-                  <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
-                    Verified
-                  </span>
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-            <Link
-              to="/user/hospital-details"
-              className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition text-center"
-            >
-              View Details
-            </Link>
-
-          </div>
-
-        </div>
-
-
-        {/* Emergency Information */}
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-5">
-
-          <h4 className="font-semibold text-red-900">
-            Need immediate emergency assistance?
-          </h4>
-
-          <p className="text-sm text-red-800 mt-1">
-            Use the Emergency Request feature to request a hospital,
-            blood, ICU, oxygen, and ambulance assistance together.
-          </p>
-
-          <Link
-            to="/user/emergency"
-            className="inline-block mt-4 text-sm font-semibold text-red-700 hover:text-red-900"
-          >
-            Create Emergency Request →
-          </Link>
-
-        </div>
+        </section>
 
       </main>
-
     </div>
   );
 }

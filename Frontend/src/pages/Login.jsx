@@ -4,7 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 function Login() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("patient");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
@@ -17,6 +18,16 @@ function Login() {
     setLoading(true);
 
     try {
+      // Other role login APIs are not connected yet
+      if (role !== "patient") {
+        setError(
+          "Login for this role will be connected after the backend API is provided."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Patient login
       const response = await fetch(
         "http://localhost:5000/api/auth/login",
         {
@@ -25,7 +36,7 @@ function Login() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: email,
+            email: identifier,
             password: password,
           }),
         }
@@ -40,15 +51,15 @@ function Login() {
       }
 
       // Save logged-in user information
-     sessionStorage.setItem(
-  "medreachToken",
-  data.token
-);
+      sessionStorage.setItem(
+        "medreachToken",
+        data.token
+      );
 
-sessionStorage.setItem(
-  "medreachUser",
-  JSON.stringify(data.user)
-);
+      sessionStorage.setItem(
+        "medreachUser",
+        JSON.stringify(data.user)
+      );
 
       // Go to patient dashboard
       navigate("/user/dashboard");
@@ -94,18 +105,67 @@ sessionStorage.setItem(
           className="space-y-5"
         >
 
-          {/* Email */}
+          {/* Login Role */}
           <div>
 
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Email Address
+              Login As
+            </label>
+
+            <select
+              value={role}
+              onChange={(e) => {
+                setRole(e.target.value);
+                setIdentifier("");
+                setError("");
+              }}
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+            >
+              <option value="patient">
+                Patient / Family
+              </option>
+
+              <option value="donor">
+                Donor
+              </option>
+
+              <option value="hospital">
+                Hospital
+              </option>
+
+              <option value="bloodbank">
+                Blood Bank
+              </option>
+
+              <option value="ambulance">
+                Ambulance
+              </option>
+            </select>
+
+          </div>
+
+          {/* Email / Username */}
+          <div>
+
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              {role === "patient" || role === "donor"
+                ? "Email Address"
+                : "Username"}
             </label>
 
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              type={
+                role === "patient" || role === "donor"
+                  ? "email"
+                  : "text"
+              }
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder={
+                role === "patient" || role === "donor"
+                  ? "Enter your email"
+                  : "Enter your username"
+              }
               required
               className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
             />
@@ -165,6 +225,18 @@ sessionStorage.setItem(
           </Link>
 
         </p>
+
+        {/* Back to Home */}
+        <div className="text-center mt-5">
+
+          <Link
+            to="/"
+            className="text-sm text-slate-500 hover:text-red-600 transition"
+          >
+            ← Back to Home
+          </Link>
+
+        </div>
 
       </div>
 
