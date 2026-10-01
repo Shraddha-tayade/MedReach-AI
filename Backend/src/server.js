@@ -5,7 +5,7 @@ require("dotenv").config();
 require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const authenticateToken = require("./middleware/authMiddleware");
-
+const resourceRoutes = require("./routes/resourceRoutes");
 const profilesRoutes = require("./routes/profilesRoutes");
 const bloodInventoryRoutes = require("./routes/bloodInventoryRoutes");
 
@@ -13,15 +13,16 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(cors());
-app.use(express.json());
+// app.use(cors());
+// app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profilesRoutes);
 app.use("/api/blood-bank/inventory", bloodInventoryRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/profile", profilesRoutes);
-app.use("/api/blood-bank/inventory", bloodInventoryRoutes);
+app.use("/api/resources", resourceRoutes);
+// app.use("/api/auth", authRoutes);
+// app.use("/api/profile", profilesRoutes);
+// app.use("/api/blood-bank/inventory", bloodInventoryRoutes);
 
 app.get("/", (req, res) => {
     res.json({
