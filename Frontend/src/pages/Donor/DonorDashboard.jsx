@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +22,7 @@ function DonorDashboard() {
     },
     {
       image:
-        "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=1400&q=80",
+        "https://images.openai.com/static-rsc-4/FuH1zADLL0gsVSruJkQcCQ1ZMTRJONkTNdIHlz4WsZrCe6AbQyv0T4a1eLLd0zP0NAbZ3vp6a5d49D03WyyryGKgOX20pSBNa8XxmEjJu-GlirS4ggzMB6MeG05CMn9DO1JoNBEAdFolLt-pfMwC4ZgRpuoCm7Q3HElZHcc2z6g?purpose=inline",
       title: "Together, We Can Save Lives ❤️‍🩹",
       text: "Thank you for being a responsible and reliable blood donor.",
     },
@@ -113,6 +112,25 @@ function DonorDashboard() {
     },
   ];
 
+  // Reliability data for frontend testing
+  const reliabilityStats = {
+    completedDonations: 5,
+    unsuccessfulAcceptedRequests: 1,
+    requestsAccepted: 2,
+  };
+
+  // Reliability Score Calculation
+  const evaluatedRequests =
+    reliabilityStats.completedDonations +
+    reliabilityStats.unsuccessfulAcceptedRequests;
+
+  const reliabilityScore =
+    evaluatedRequests === 0
+      ? 0
+      : Math.round(
+          (reliabilityStats.completedDonations / evaluatedRequests) * 100
+        );
+
   // Automatic image slider
   useEffect(() => {
     const timer = setInterval(() => {
@@ -141,24 +159,18 @@ function DonorDashboard() {
       {/* HEADER */}
       <header className="border-b border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
-
           {/* Logo */}
           <div className="shrink-0">
             <p className="text-xl font-semibold text-red-600">
-              MedReach -Smart Emergency Medical Resource Platform
+              MedReach - Smart Emergency Medical Resource Platform
             </p>
-
-           
           </div>
 
           {/* Navigation */}
           <nav className="flex items-center gap-1 sm:gap-3">
-
             {/* Donation History */}
             <button
-              onClick={() =>
-                navigate("/Donor/donation-history")
-              }
+              onClick={() => navigate("/Donor/donation-history")}
               title="Donation History"
               className="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm"
             >
@@ -170,9 +182,7 @@ function DonorDashboard() {
 
             {/* Notifications */}
             <button
-              onClick={() =>
-                navigate("/Donor/notifications")
-              }
+              onClick={() => navigate("/Donor/notifications")}
               title="Notifications"
               className="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-600 sm:flex-row sm:gap-2 sm:px-3 sm:text-sm"
             >
@@ -194,7 +204,7 @@ function DonorDashboard() {
               </span>
             </button>
 
-            {/* Profile icon only */}
+            {/* Profile */}
             <button
               onClick={() => navigate("/Donor/profile")}
               title="Open Profile"
@@ -203,19 +213,15 @@ function DonorDashboard() {
             >
               👤
             </button>
-
           </nav>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
         {/* WELCOME */}
         <div className="mb-6">
-       
-
           <h2 className="mt-1 text-3xl font-bold text-slate-800 sm:text-4xl">
-            Welcome, Donor 
+            Welcome, Donor
           </h2>
 
           <p className="mt-2 text-slate-600">
@@ -275,12 +281,13 @@ function DonorDashboard() {
 
         {/* SUMMARY CARDS */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
+          {/* Blood Group */}
           <div className="rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-2xl">
                 🩸
               </div>
+
               <span className="text-xs font-semibold text-green-600">
                 Active
               </span>
@@ -289,11 +296,13 @@ function DonorDashboard() {
             <p className="mt-5 text-sm text-slate-500">
               Blood Group
             </p>
+
             <p className="mt-1 text-2xl font-bold text-red-600">
               O+
             </p>
           </div>
 
+          {/* Donations Completed */}
           <div className="rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-2xl">
               ❤️‍🩹
@@ -302,11 +311,13 @@ function DonorDashboard() {
             <p className="mt-5 text-sm text-slate-500">
               Donations Completed
             </p>
+
             <p className="mt-1 text-2xl font-bold text-slate-800">
-              5
+              {reliabilityStats.completedDonations}
             </p>
           </div>
 
+          {/* Total Requests */}
           <div className="rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-2xl">
               📋
@@ -315,11 +326,13 @@ function DonorDashboard() {
             <p className="mt-5 text-sm text-slate-500">
               Total Requests
             </p>
+
             <p className="mt-1 text-2xl font-bold text-slate-800">
               {requests.length}
             </p>
           </div>
 
+          {/* Reliability Score */}
           <div className="rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-100 text-2xl">
               ⭐
@@ -328,15 +341,15 @@ function DonorDashboard() {
             <p className="mt-5 text-sm text-slate-500">
               Reliability Score
             </p>
+
             <p className="mt-1 text-2xl font-bold text-slate-800">
-              95%
+              {reliabilityScore}%
             </p>
           </div>
         </div>
 
         {/* AVAILABILITY AND DONATION INFORMATION */}
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
-
           {/* Availability */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
@@ -388,15 +401,6 @@ function DonorDashboard() {
                   : "You will not receive new donation requests."}
               </p>
             </div>
-
-            <div className="mt-4 rounded-xl bg-blue-50 p-4">
-              <p className="text-sm font-semibold text-blue-700">
-                📍 Live Location
-              </p>
-              <p className="mt-1 text-sm text-blue-600">
-                Location sharing settings
-              </p>
-            </div>
           </div>
 
           {/* Donation Information */}
@@ -411,10 +415,6 @@ function DonorDashboard() {
                   Keep track of your donation eligibility.
                 </p>
               </div>
-
-              <span className="w-fit rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                Sample Information
-              </span>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -422,9 +422,11 @@ function DonorDashboard() {
                 <p className="text-sm text-slate-500">
                   Last Donation
                 </p>
+
                 <p className="mt-2 text-xl font-bold text-slate-800">
                   20 Sep 2026
                 </p>
+
                 <p className="mt-1 text-xs text-slate-400">
                   Thank you for helping save a life.
                 </p>
@@ -434,9 +436,11 @@ function DonorDashboard() {
                 <p className="text-sm text-slate-500">
                   Next Eligible Donation
                 </p>
+
                 <p className="mt-2 text-xl font-bold text-red-600">
                   20 Dec 2026
                 </p>
+
                 <p className="mt-1 text-xs text-slate-400">
                   Confirm eligibility with qualified medical staff.
                 </p>
@@ -464,11 +468,10 @@ function DonorDashboard() {
             </p>
 
             <p className="mt-2 text-sm font-medium text-slate-500">
-              {requests.length} sample requests available
-            </p>
+              {requests.length}</p>
           </div>
 
-          {/* Scrollable area: approximately 3 cards visible */}
+          {/* Scrollable area */}
           <div className="mt-6 max-h-[470px] space-y-4 overflow-y-auto overscroll-contain pr-3">
             {requests.map((request) => (
               <div
@@ -476,7 +479,6 @@ function DonorDashboard() {
                 className="rounded-2xl border border-slate-100 bg-slate-50 p-5 transition hover:border-red-200 hover:bg-red-50/30"
               >
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-
                   <div className="flex gap-4">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-100 text-2xl">
                       🩸
@@ -528,13 +530,10 @@ function DonorDashboard() {
               </div>
             ))}
           </div>
-
-        
         </div>
 
         {/* RELIABILITY AND IMPACT */}
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-
           {/* Reliability */}
           <div className="rounded-2xl bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
@@ -542,42 +541,64 @@ function DonorDashboard() {
                 <h2 className="text-lg font-bold text-slate-800">
                   Reliability Score ⭐
                 </h2>
+
                 <p className="mt-1 text-sm text-slate-500">
                   Your contribution and response history.
                 </p>
               </div>
 
               <p className="text-3xl font-bold text-green-600">
-                95%
+                {reliabilityScore}%
               </p>
             </div>
 
+            {/* Dynamic Progress Bar */}
             <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-200">
-              <div className="h-full w-[95%] rounded-full bg-green-500" />
+              <div
+                className="h-full rounded-full bg-green-500 transition-all duration-500"
+                style={{ width: `${reliabilityScore}%` }}
+              />
             </div>
 
+            {/* Rating Stars */}
             <div className="mt-5 flex gap-1 text-xl text-yellow-500">
               ★ ★ ★ ★ ★
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-4">
+              {/* Donations Completed */}
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-2xl font-bold text-slate-800">
-                  5
+                  {reliabilityStats.completedDonations}
                 </p>
+
                 <p className="text-sm text-slate-500">
                   Donations Completed
                 </p>
               </div>
 
+              {/* Requests Accepted */}
               <div className="rounded-xl bg-slate-50 p-4">
                 <p className="text-2xl font-bold text-slate-800">
-                  2
+                  {reliabilityStats.requestsAccepted}
                 </p>
+
                 <p className="text-sm text-slate-500">
                   Requests Accepted
                 </p>
               </div>
+            </div>
+
+            {/* Score Explanation */}
+            <div className="mt-4 rounded-xl bg-green-50 p-4">
+              <p className="text-sm text-green-800">
+                <span className="font-bold">
+                  Score Calculation:
+                </span>{" "}
+                {reliabilityStats.completedDonations} completed
+                donations out of{" "}
+                {evaluatedRequests} evaluated requests.
+              </p>
             </div>
           </div>
 
@@ -604,8 +625,9 @@ function DonorDashboard() {
 
               <div>
                 <p className="text-2xl font-bold text-red-600">
-                  5 Donations
+                  {reliabilityStats.completedDonations} Donations
                 </p>
+
                 <p className="text-sm text-slate-500">
                   Lives potentially supported
                 </p>
@@ -613,8 +635,6 @@ function DonorDashboard() {
             </div>
           </div>
         </div>
-
-        
 
         {/* BOTTOM MESSAGE */}
         <div className="mt-8 rounded-2xl bg-slate-800 p-6 text-center text-white">
@@ -629,7 +649,6 @@ function DonorDashboard() {
             someone during their most difficult moment.
           </p>
         </div>
-
       </main>
     </div>
   );

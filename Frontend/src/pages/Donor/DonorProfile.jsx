@@ -1,9 +1,9 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function DonorProfile() {
   const navigate = useNavigate();
-
   const [editing, setEditing] = useState(false);
 
   const [profile, setProfile] = useState({
@@ -29,7 +29,6 @@ function DonorProfile() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
-
       <button
         onClick={() => navigate("/Donor/dashboard")}
         className="mb-6 text-sm font-semibold text-red-600 hover:text-red-700"
@@ -38,20 +37,17 @@ function DonorProfile() {
       </button>
 
       <div className="mb-8">
-       
-
         <h1 className="mt-1 text-3xl font-bold text-slate-800">
           My Profile 👤
         </h1>
-
         <p className="mt-2 text-slate-600">
           View and update your donor information.
         </p>
       </div>
 
+      {/* Profile Header */}
       <div className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
           <div className="flex items-center gap-4">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-4xl">
               🩸
@@ -80,12 +76,11 @@ function DonorProfile() {
           >
             {editing ? "Cancel Editing" : "✏️ Update Profile"}
           </button>
-
         </div>
       </div>
 
+      {/* Personal Information */}
       <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-
         <h2 className="text-xl font-bold text-slate-800">
           Personal Information
         </h2>
@@ -95,7 +90,7 @@ function DonorProfile() {
         </p>
 
         <div className="mt-6 grid gap-5 md:grid-cols-2">
-
+          {/* Full Name */}
           <div>
             <label className="text-sm font-semibold text-slate-600">
               Full Name
@@ -116,6 +111,7 @@ function DonorProfile() {
             )}
           </div>
 
+          {/* Blood Group */}
           <div>
             <label className="text-sm font-semibold text-slate-600">
               Blood Group
@@ -126,6 +122,7 @@ function DonorProfile() {
             </div>
           </div>
 
+          {/* Phone Number */}
           <div>
             <label className="text-sm font-semibold text-slate-600">
               Phone Number
@@ -146,6 +143,7 @@ function DonorProfile() {
             )}
           </div>
 
+          {/* Email Address */}
           <div>
             <label className="text-sm font-semibold text-slate-600">
               Email Address
@@ -166,6 +164,7 @@ function DonorProfile() {
             )}
           </div>
 
+          {/* Location - Kept Unchanged */}
           <div>
             <label className="text-sm font-semibold text-slate-600">
               Location
@@ -185,7 +184,6 @@ function DonorProfile() {
               </div>
             )}
           </div>
-
         </div>
 
         {editing && (
@@ -196,22 +194,19 @@ function DonorProfile() {
             ✓ Save Changes
           </button>
         )}
-
       </div>
 
+      {/* Donation Information */}
       <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-
         <h2 className="text-xl font-bold text-slate-800">
           🩸 Donation Information
         </h2>
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-
           <div className="rounded-xl bg-slate-50 p-5">
             <p className="text-sm text-slate-500">
               Last Donation
             </p>
-
             <p className="mt-2 font-bold text-slate-800">
               📅 {profile.lastDonation}
             </p>
@@ -221,7 +216,6 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Next Eligible Donation
             </p>
-
             <p className="mt-2 font-bold text-green-700">
               📅 {profile.nextDonation}
             </p>
@@ -231,7 +225,6 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Total Donations
             </p>
-
             <p className="mt-2 text-2xl font-bold text-red-600">
               {profile.totalDonations}
             </p>
@@ -241,31 +234,24 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Total Requests
             </p>
-
             <p className="mt-2 text-2xl font-bold text-blue-600">
               {profile.totalRequests}
             </p>
           </div>
-
         </div>
       </div>
 
-
-       
-
+      {/* Donor Reliability Score */}
       <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-
         <h2 className="text-xl font-bold text-slate-800">
           ⭐ Donor Reliability Score
         </h2>
 
         <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center">
-
           <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-red-50">
             <span className="text-3xl font-bold text-red-600">
               {profile.reliabilityScore}%
             </span>
-
             <span className="text-xs text-slate-500">
               Score
             </span>
@@ -284,16 +270,13 @@ function DonorProfile() {
               Based on completed donations and accepted emergency requests.
             </p>
           </div>
-
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-
           <div className="rounded-xl bg-slate-50 p-4">
             <p className="text-sm text-slate-500">
               Donations Completed
             </p>
-
             <p className="mt-1 text-xl font-bold text-slate-800">
               {profile.totalDonations}
             </p>
@@ -303,7 +286,6 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Total Requests
             </p>
-
             <p className="mt-1 text-xl font-bold text-slate-800">
               {profile.totalRequests}
             </p>
@@ -313,48 +295,14 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Reliability
             </p>
-
             <p className="mt-1 text-xl font-bold text-green-600">
               {profile.reliabilityScore}%
             </p>
           </div>
-
         </div>
-
       </div>
-
-      <div className="mt-6 rounded-2xl border border-green-100 bg-green-50 p-6">
-
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-          <div>
-            <h2 className="text-xl font-bold text-slate-800">
-              📍 Live Location
-            </h2>
-
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Your live location is used to identify nearby emergency blood
-              requests and calculate your distance from the hospital.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-
-            <span className="h-3 w-3 animate-pulse rounded-full bg-green-500"></span>
-
-            <span className="font-bold text-green-700">
-              Always Enabled
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-
     </div>
   );
 }
 
 export default DonorProfile;
-

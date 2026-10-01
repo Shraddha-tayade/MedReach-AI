@@ -215,15 +215,12 @@ function DonorNotifications() {
 
             </div>
           ))}
-
         </div>
       </div>
 
       {/* Emergency Alerts */}
       <div className="mt-6 rounded-2xl border border-red-100 bg-red-50 p-6">
-
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
           <div>
             <h2 className="text-xl font-bold text-slate-800">
               🚨 Emergency Alerts
@@ -260,4 +257,3 @@ function DonorNotifications() {
 }
 
 export default DonorNotifications;
-
