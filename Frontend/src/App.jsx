@@ -14,6 +14,12 @@ import DonorProfile from "./pages/Donor/DonorProfile";
 import DonorNotifications from "./pages/Donor/DonorNotifications";
 import DonorSettings from "./pages/Donor/DonorSettings";
 
+import PatientRegister from "./pages/registration/PatientRegister";
+import DonorRegister from "./pages/registration/DonorRegister";
+import HospitalRegister from "./pages/registration/HospitalRegister";
+import BloodBankRegister from "./pages/registration/BloodBankRegister";
+import AmbulanceRegister from "./pages/registration/AmbulanceRegister";
+
 import UserDashboard from "./pages/user/dashboard/UserDashboard";
 
 import EmergencyRequest from "./pages/user/dashboard/emergency/EmergencyRequest";
@@ -55,6 +61,26 @@ function App() {
         <Route path="/Donor/notifications" element={<DonorNotifications />} />
         <Route path="/Donor/settings" element={<DonorSettings />} />
 
+        <Route
+          path="/register/patient"
+          element={<PatientRegister />}
+        />
+        <Route
+          path="/register/donor"
+          element={<DonorRegister />}
+        />
+        <Route
+          path="/register/hospital"
+          element={<HospitalRegister />}
+        />
+        <Route
+          path="/register/bloodbank"
+          element={<BloodBankRegister />}
+        />
+        <Route
+          path="/register/ambulance"
+          element={<AmbulanceRegister />}
+        />
 
         <Route path="/user/dashboard" element={<UserDashboard />} />
         <Route path="/user/emergency" element={<EmergencyRequest />} />

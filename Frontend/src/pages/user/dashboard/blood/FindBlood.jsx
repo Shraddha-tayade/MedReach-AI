@@ -1,14 +1,84 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function FindBlood() {
+  const [bloodGroup, setBloodGroup] = useState("");
+  const [unitsRequired, setUnitsRequired] = useState("");
+  const [radius, setRadius] = useState("");
+
+  const [location, setLocation] = useState("");
+  const [locationMode, setLocationMode] = useState("manual");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  const [searched, setSearched] = useState(false);
+
+  const useCurrentLocation = () => {
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError(
+        "Location detection is not supported by your browser."
+      );
+      return;
+    }
+
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+
+        setLocationMode("current");
+        setLocation("");
+        setLocationLoading(false);
+      },
+      () => {
+        setLocationLoading(false);
+        setLocationError(
+          "Unable to access your location. Please allow location permission or enter your location manually."
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  const handleManualLocation = (e) => {
+    setLocation(e.target.value);
+    setLocationMode("manual");
+
+    setLatitude(null);
+    setLongitude(null);
+    setLocationError("");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+
+    setSearched(true);
+
+    // Later your backend API can receive:
+    // latitude, longitude, bloodGroup, unitsRequired, radius
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
 
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-6 lg:px-10 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
 
-          <Link to="/user/dashboard" className="flex items-center gap-2">
+          <Link
+            to="/user/dashboard"
+            className="flex items-center gap-2"
+          >
             <div className="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold">
               M
             </div>
@@ -28,322 +98,196 @@ function FindBlood() {
         </div>
       </header>
 
+      {/* Main */}
+      <main className="max-w-6xl mx-auto px-6 py-10">
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
-
-        {/* Heading */}
+        {/* Title */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-red-600 mb-2">
-            Blood Resources
+          <p className="text-red-600 font-semibold text-sm mb-2">
+            BLOOD AVAILABILITY
           </p>
 
           <h2 className="text-3xl font-bold text-slate-900">
             Find Blood
           </h2>
 
-          <p className="text-slate-500 mt-2">
-            Search for available blood near your location.
+          <p className="text-slate-600 mt-2">
+            Find available blood resources near your location.
           </p>
         </div>
 
-
         {/* Search Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
+        <section className="bg-white rounded-2xl border border-slate-200 p-7">
 
-          <h3 className="text-xl font-bold text-slate-900 mb-5">
+          <h3 className="text-xl font-bold text-slate-900 mb-6">
             Search Blood Availability
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
-            {/* Blood Group */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Blood Group
-              </label>
-
-              <select
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 bg-white"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  Select group
-                </option>
-                <option>O+</option>
-                <option>O−</option>
-                <option>A+</option>
-                <option>A−</option>
-                <option>B+</option>
-                <option>B−</option>
-                <option>AB+</option>
-                <option>AB−</option>
-              </select>
-            </div>
-
-
-            {/* Units */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Units Required
-              </label>
-
-              <input
-                type="number"
-                min="1"
-                placeholder="Enter units"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500"
-              />
-            </div>
-
+          <form onSubmit={handleSearch}>
 
             {/* Location */}
-            <div>
+            <div className="mb-7">
+
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Location
               </label>
 
+              {/* Manual location */}
               <input
                 type="text"
-                placeholder="Enter city or area"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500"
+                value={location}
+                onChange={handleManualLocation}
+                placeholder="Enter full location"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
               />
-            </div>
 
+              <p className="text-xs text-slate-400 mt-2">
+                Example: Pune, Maharashtra
+              </p>
 
-            {/* Radius */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Search Radius
-              </label>
+              {/* OR */}
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-slate-200"></div>
+                <span className="text-xs text-slate-400">or</span>
+                <div className="flex-1 h-px bg-slate-200"></div>
+              </div>
 
-              <select
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 bg-white"
-                defaultValue="10"
+              {/* Current location */}
+              <button
+                type="button"
+                onClick={useCurrentLocation}
+                disabled={locationLoading}
+                className={`w-full border rounded-xl p-4 text-left transition ${
+                  locationMode === "current"
+                    ? "border-green-500 bg-green-50"
+                    : "border-slate-200 hover:border-red-400 hover:bg-red-50"
+                }`}
               >
-                <option value="5">Within 5 km</option>
-                <option value="10">Within 10 km</option>
-                <option value="25">Within 25 km</option>
-                <option value="50">Within 50 km</option>
-              </select>
+                <div className="flex items-center gap-3">
+
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
+                      locationMode === "current"
+                        ? "bg-green-100"
+                        : "bg-red-50"
+                    }`}
+                  >
+                    {locationMode === "current" ? "✓" : "📍"}
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      {locationLoading
+                        ? "Detecting your location..."
+                        : locationMode === "current"
+                        ? "Current Location Detected"
+                        : "Use My Current Location"}
+                    </p>
+
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      {locationMode === "current"
+                        ? "Browser location selected"
+                        : "Let your browser detect your location"}
+                    </p>
+                  </div>
+
+                </div>
+              </button>
+
+              {locationError && (
+                <p className="text-sm text-red-600 mt-2">
+                  {locationError}
+                </p>
+              )}
+
             </div>
 
-          </div>
+            {/* Filters */}
+            <div className="grid md:grid-cols-3 gap-5">
 
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Blood Group
+                </label>
 
-          {/* Search Button */}
-          <div className="mt-5">
+                <select
+                  value={bloodGroup}
+                  onChange={(e) => setBloodGroup(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <option value="">
+                    Select blood group
+                  </option>
+                  <option>A+</option>
+                  <option>A-</option>
+                  <option>B+</option>
+                  <option>B-</option>
+                  <option>AB+</option>
+                  <option>AB-</option>
+                  <option>O+</option>
+                  <option>O-</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Units Required
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={unitsRequired}
+                  onChange={(e) => setUnitsRequired(e.target.value)}
+                  placeholder="Enter units"
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Search Radius
+                </label>
+
+                <select
+                  value={radius}
+                  onChange={(e) => setRadius(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <option value="">
+                    Select radius
+                  </option>
+                  <option value="5">Within 5 km</option>
+                  <option value="10">Within 10 km</option>
+                  <option value="25">Within 25 km</option>
+                  <option value="50">Within 50 km</option>
+                </select>
+              </div>
+
+            </div>
+
+            {/* Search */}
             <button
-              type="button"
-              className="w-full md:w-auto px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
+              type="submit"
+              className="w-full mt-6 py-3.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition"
             >
               Search Blood
             </button>
-          </div>
 
-        </div>
+          </form>
 
-
-        {/* Results */}
-        <div className="mb-5 flex items-center justify-between">
-
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">
-              Available Blood
-            </h3>
-
-            <p className="text-sm text-slate-500 mt-1">
-              Showing nearby verified blood resources.
-            </p>
-          </div>
-
-          <span className="text-sm text-slate-500">
-            3 results
-          </span>
-
-        </div>
-
-
-        {/* Result 1 */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-4">
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-
-            <div className="flex items-start gap-4">
-
-              <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-2xl">
-                🩸
-              </div>
-
-              <div>
-                <h4 className="text-lg font-semibold text-slate-900">
-                  City Blood Bank
-                </h4>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  Amravati • 2.4 km away
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-3">
-
-                  <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm font-semibold">
-                    O−
-                  </span>
-
-                  <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
-                    6 Units Available
-                  </span>
-
-                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-                    Verified
-                  </span>
-
-                </div>
-              </div>
-
+          {searched && (
+            <div className="mt-6 p-4 bg-slate-50 rounded-xl text-sm text-slate-600">
+              Blood search submitted. Available blood resources will appear here.
             </div>
+          )}
 
-
-            <button
-              type="button"
-              className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
-            >
-              Request Blood
-            </button>
-
-          </div>
-
-        </div>
-
-
-        {/* Result 2 */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-4">
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-
-            <div className="flex items-start gap-4">
-
-              <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-2xl">
-                🩸
-              </div>
-
-              <div>
-                <h4 className="text-lg font-semibold text-slate-900">
-                  Government Blood Centre
-                </h4>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  Amravati • 4.8 km away
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-3">
-
-                  <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm font-semibold">
-                    O−
-                  </span>
-
-                  <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
-                    3 Units Available
-                  </span>
-
-                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-                    Verified
-                  </span>
-
-                </div>
-              </div>
-
-            </div>
-
-
-            <button
-              type="button"
-              className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
-            >
-              Request Blood
-            </button>
-
-          </div>
-
-        </div>
-
-
-        {/* Result 3 */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-8">
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-
-            <div className="flex items-start gap-4">
-
-              <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-2xl">
-                🩸
-              </div>
-
-              <div>
-                <h4 className="text-lg font-semibold text-slate-900">
-                  LifeLine Blood Bank
-                </h4>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  Amravati • 7.1 km away
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-3">
-
-                  <span className="px-3 py-1 bg-red-50 text-red-700 rounded-full text-sm font-semibold">
-                    O−
-                  </span>
-
-                  <span className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
-                    2 Units Available
-                  </span>
-
-                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-                    Verified
-                  </span>
-
-                </div>
-              </div>
-
-            </div>
-
-
-            <Link
-                to="/user/blood-request"
-                className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition text-center"
-            >
-                Request Blood
-            </Link>
-
-          </div>
-
-        </div>
-
-
-        {/* Information */}
-        <div className="bg-red-50 border border-red-100 rounded-2xl p-5">
-
-          <h4 className="font-semibold text-red-900">
-            Need blood urgently?
-          </h4>
-
-          <p className="text-sm text-red-800 mt-1">
-            For critical emergencies, use the Emergency Request feature
-            to request blood along with hospitals, ICU beds, oxygen,
-            or ambulance assistance.
-          </p>
-
-          <Link
-            to="/user/emergency"
-            className="inline-block mt-4 text-sm font-semibold text-red-700 hover:text-red-900"
-          >
-            Create Emergency Request →
-          </Link>
-
-        </div>
+        </section>
 
       </main>
-
     </div>
   );
 }
