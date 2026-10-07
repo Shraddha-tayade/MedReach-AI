@@ -57,6 +57,7 @@ function EmergencyRequest() {
 
   const [requestId, setRequestId] = useState(null);
   const [submitError, setSubmitError] = useState("");
+  const [providerDispatchStatus, setProviderDispatchStatus] = useState("");
 
   // ================= RESOURCE TOGGLE =================
 
@@ -365,6 +366,350 @@ function EmergencyRequest() {
   };
 
   // =========================================================
+  // PROVIDER DISPATCH HELPERS
+  // =========================================================
+
+  const getArrayFromResponse = (data, keys = []) => {
+    for (const key of keys) {
+      if (Array.isArray(data?.[key])) {
+        return data[key];
+      }
+    }
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (Array.isArray(data?.data)) {
+      return data.data;
+    }
+
+    return [];
+  };
+
+  const getItemId = (item) =>
+    item?.id ||
+    item?.itemId ||
+    item?.emergencyRequestItemId ||
+    item?.emergency_request_item_id;
+
+  const getProviderId = (provider, providerType) => {
+    if (!provider) return null;
+
+    if (providerType === "BLOOD_BANK") {
+      return (
+        provider?.blood_bank_id ||
+        provider?.bloodBankId ||
+        provider?.providerId ||
+        provider?.provider_id ||
+        provider?.bloodBank?.id ||
+        provider?.blood_bank?.id ||
+        provider?.id ||
+        null
+      );
+    }
+
+    if (providerType === "HOSPITAL") {
+      return (
+        provider?.hospital_id ||
+        provider?.hospitalId ||
+        provider?.providerId ||
+        provider?.provider_id ||
+        provider?.hospital?.id ||
+        provider?.id ||
+        null
+      );
+    }
+
+    return (
+      provider?.providerId ||
+      provider?.provider_id ||
+      provider?.id ||
+      null
+    );
+  };
+
+  const dispatchProvidersForItem = async ({
+    item,
+    token,
+    latitude,
+    longitude,
+  }) => {
+    const itemId = getItemId(item);
+
+    if (!itemId) {
+      return {
+        resourceType: item?.resourceType,
+        sent: 0,
+        message: "Item ID was not returned by the backend.",
+      };
+    }
+
+    const resourceType = String(
+      item?.resourceType || item?.resource_type || ""
+    ).toUpperCase();
+
+    // Ambulance search/provider lookup is not part of the confirmed
+    // frontend API contract, so do not invent an endpoint here.
+    if (resourceType === "AMBULANCE") {
+      return {
+        resourceType,
+        sent: 0,
+        skipped: true,
+        message:
+          "Ambulance provider dispatch is waiting for the confirmed ambulance search API.",
+      };
+    }
+
+    let searchUrl = "";
+    let searchBody = {};
+    let providerType = "";
+    let providerListKeys = [];
+
+    if (resourceType === "BLOOD") {
+      searchUrl =
+        "http://localhost:5000/api/resources/blood/search";
+
+      searchBody = {
+        bloodGroup: item?.bloodGroup || bloodGroup,
+        bloodComponent:
+          item?.bloodComponent || "WHOLE_BLOOD",
+        unitsRequired:
+          Number(item?.quantity || bloodUnits || 1),
+        latitude,
+        longitude,
+        radius: 10,
+      };
+
+      providerType = "BLOOD_BANK";
+      providerListKeys = [
+        "bloodBanks",
+        "blood_banks",
+        "resources",
+        "results",
+        "matches",
+      ];
+    } else if (resourceType === "ICU") {
+      searchUrl =
+        "http://localhost:5000/api/resources/icu/search";
+
+      searchBody = {
+        latitude,
+        longitude,
+        radius: 10,
+      };
+
+      providerType = "HOSPITAL";
+      providerListKeys = [
+        "hospitals",
+        "resources",
+        "results",
+        "matches",
+      ];
+    } else if (resourceType === "OXYGEN") {
+      searchUrl =
+        "http://localhost:5000/api/resources/oxygen/search";
+
+      searchBody = {
+        latitude,
+        longitude,
+        radius: 10,
+      };
+
+      providerType = "HOSPITAL";
+      providerListKeys = [
+        "hospitals",
+        "resources",
+        "results",
+        "matches",
+      ];
+    } else {
+      return {
+        resourceType,
+        sent: 0,
+        message: "No provider search is configured for this resource.",
+      };
+    }
+
+    const searchResponse = await fetch(searchUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(searchBody),
+    });
+
+    const searchData = await searchResponse.json();
+
+    if (!searchResponse.ok) {
+      throw new Error(
+        searchData?.message ||
+          searchData?.error ||
+          `Unable to search providers for ${resourceType}.`
+      );
+    }
+
+    const providers = getArrayFromResponse(
+      searchData,
+      providerListKeys
+    );
+
+    const providerIds = [
+      ...new Set(
+        providers
+          .map((provider) =>
+            getProviderId(provider, providerType)
+          )
+          .filter(Boolean)
+      ),
+    ].slice(0, 3);
+
+    if (providerIds.length === 0) {
+      return {
+        resourceType,
+        sent: 0,
+        message: `No suitable ${
+          providerType === "BLOOD_BANK"
+            ? "blood bank"
+            : "hospital"
+        } provider found nearby.`,
+      };
+    }
+
+    const dispatchResponse = await fetch(
+      `http://localhost:5000/api/emergency-requests/items/${itemId}/providers`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          providers: providerIds.map((providerId) => ({
+            providerType,
+            providerId: Number(providerId),
+          })),
+        }),
+      }
+    );
+
+    const dispatchData = await dispatchResponse.json();
+
+    if (!dispatchResponse.ok) {
+      throw new Error(
+        dispatchData?.message ||
+          dispatchData?.error ||
+          `Unable to send ${resourceType} request to providers.`
+      );
+    }
+
+    return {
+      resourceType,
+      sent: providerIds.length,
+      providerType,
+      providerIds,
+      message: `Request sent to ${providerIds.length} nearby ${
+        providerType === "BLOOD_BANK"
+          ? "blood bank(s)"
+          : "hospital(s)"
+      }.`,
+    };
+  };
+
+  const dispatchEmergencyRequest = async ({
+    requestId: createdRequestId,
+    createdItems,
+    token,
+  }) => {
+    let itemsForDispatch = Array.isArray(createdItems)
+      ? createdItems
+      : [];
+
+    // The create response may not include full item IDs.
+    // Fetch the created request once so every item has its real itemId.
+    if (
+      itemsForDispatch.length === 0 ||
+      itemsForDispatch.some((item) => !getItemId(item))
+    ) {
+      const requestResponse = await fetch(
+        `http://localhost:5000/api/emergency-requests/${createdRequestId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const requestData = await requestResponse.json();
+
+      if (requestResponse.ok) {
+        itemsForDispatch =
+          requestData?.request?.items ||
+          requestData?.request?.resources ||
+          requestData?.items ||
+          requestData?.resources ||
+          itemsForDispatch;
+      }
+    }
+
+    const results = [];
+
+    for (const item of itemsForDispatch) {
+      try {
+        const result = await dispatchProvidersForItem({
+          item,
+          token,
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+        });
+
+        results.push(result);
+      } catch (error) {
+        console.error(
+          `Provider dispatch failed for ${item?.resourceType}:`,
+          error
+        );
+
+        results.push({
+          resourceType: item?.resourceType,
+          sent: 0,
+          message:
+            error.message ||
+            "Unable to dispatch this resource request.",
+        });
+      }
+    }
+
+    const sentCount = results.reduce(
+      (total, result) => total + Number(result.sent || 0),
+      0
+    );
+
+    const failedOrUnavailable = results.filter(
+      (result) =>
+        !result.skipped &&
+        Number(result.sent || 0) === 0
+    ).length;
+
+    if (sentCount > 0) {
+      setProviderDispatchStatus(
+        `Request sent to ${sentCount} provider(s). They can now respond to the emergency request.`
+      );
+    } else if (failedOrUnavailable > 0) {
+      setProviderDispatchStatus(
+        "Emergency request was created, but no matching provider could be notified yet."
+      );
+    } else {
+      setProviderDispatchStatus(
+        "Emergency request created successfully."
+      );
+    }
+
+    return results;
+  };
+
+  // =========================================================
   // SUBMIT EMERGENCY REQUEST
   // =========================================================
 
@@ -516,7 +861,8 @@ function EmergencyRequest() {
 
         description: description,
 
-        items: items,
+        // IMPORTANT: current backend expects `resources`, not `items`.
+        resources: items,
       };
 
       console.log(
@@ -574,7 +920,9 @@ function EmergencyRequest() {
 
       const createdItems =
         data?.request?.items ||
+        data?.request?.resources ||
         data?.items ||
+        data?.resources ||
         items;
 
       // ---------------- SAVE REQUEST ----------------
@@ -586,6 +934,16 @@ function EmergencyRequest() {
           items: createdItems,
         })
       );
+
+      // ---------------- DISPATCH TO PROVIDERS ----------------
+
+      // The emergency request must exist first because the provider
+      // dispatch API needs the emergency_request_item.id.
+      await dispatchEmergencyRequest({
+        requestId: createdRequestId,
+        createdItems,
+        token,
+      });
 
       // ---------------- SHOW SUCCESS ----------------
 
@@ -627,6 +985,17 @@ function EmergencyRequest() {
             MedReach is now processing your emergency
             resource request.
           </p>
+
+          {providerDispatchStatus && (
+            <div className="mt-5 p-4 rounded-xl bg-blue-50 border border-blue-200 text-left">
+              <p className="font-semibold text-blue-900">
+                Provider Dispatch
+              </p>
+              <p className="text-sm text-blue-800 mt-1">
+                {providerDispatchStatus}
+              </p>
+            </div>
+          )}
 
           {/* REQUEST ID */}
 
@@ -1561,7 +1930,7 @@ function EmergencyRequest() {
             >
 
               {loading
-                ? "Creating Emergency Request..."
+                ? "Creating & Notifying Providers..."
                 : "🚨 Send Emergency Request"}
 
             </button>

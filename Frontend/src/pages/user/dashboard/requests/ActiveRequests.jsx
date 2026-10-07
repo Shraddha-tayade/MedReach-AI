@@ -51,31 +51,36 @@ function ActiveRequests() {
         );
       }
 
-      if (!data?.success) {
-        throw new Error(
-          data?.message || "Unable to load active requests."
-        );
-      }
+const allRequests =
+  Array.isArray(data?.requests)
+    ? data.requests
+    : Array.isArray(data?.data?.requests)
+    ? data.data.requests
+    : Array.isArray(data?.history)
+    ? data.history
+    : Array.isArray(data?.data)
+    ? data.data
+    : [];
 
-      const allRequests = Array.isArray(data.requests)
-        ? data.requests
-        : [];
+// Show every request that is not completed or cancelled
+const activeRequests = allRequests.filter((request) => {
+  const statusValue =
+    typeof request?.status === "string"
+      ? request.status
+      : request?.status?.status ||
+        request?.status?.name ||
+        request?.status?.value ||
+        "";
 
-      // No dedicated Active Requests API has been provided.
-      // We use the confirmed history endpoint and filter
-      // completed/cancelled requests on the frontend.
-      const activeRequests = allRequests.filter((request) => {
-        const status = String(
-          request?.status || ""
-        ).toUpperCase();
+  const status = String(statusValue).toUpperCase();
 
-        return (
-          status !== "COMPLETED" &&
-          status !== "CANCELLED"
-        );
-      });
+  return (
+    status !== "COMPLETED" &&
+    status !== "CANCELLED"
+  );
+});
 
-      setRequests(activeRequests);
+setRequests(activeRequests);
     } catch (err) {
       setError(
         err.message ||

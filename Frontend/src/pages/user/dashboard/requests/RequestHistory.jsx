@@ -51,13 +51,14 @@ function RequestHistory() {
         );
       }
 
-      if (!data?.success) {
-        throw new Error(
-          data?.message || "Unable to load request history."
-        );
-      }
+     const historyRequests =
+  data?.requests ||
+  data?.data?.requests ||
+  data?.history ||
+  data?.data ||
+  [];
 
-      setRequests(Array.isArray(data.requests) ? data.requests : []);
+setRequests(Array.isArray(historyRequests) ? historyRequests : []);
     } catch (err) {
       setError(
         err.message ||
