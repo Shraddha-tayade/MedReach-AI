@@ -4,18 +4,18 @@ import { Link, useNavigate } from "react-router-dom";
 function PatientRegister() {
   const navigate = useNavigate();
 
- const [formData, setFormData] = useState({
-  name: "",
-  phone: "",
-  email: "",
-  dateOfBirth: "",
-  addressLine: "",
-  city: "",
-  state: "",
-  pincode: "",
-  password: "",
-  confirmPassword: "",
-});
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+    addressLine: "",
+    city: "",
+    state: "",
+    pincode: "",
+    dateOfBirth: "",
+  });
 
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -41,11 +41,21 @@ function PatientRegister() {
       return;
     }
 
+    if (!/^\d{10}$/.test(formData.phone)) {
+      setError("Phone number must be 10 digits.");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(formData.pincode)) {
+      setError("Pincode must be 6 digits.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/register",
+        "http://localhost:5000/api/auth/register?type=USER",
         {
           method: "POST",
           headers: {
@@ -56,8 +66,11 @@ function PatientRegister() {
             email: formData.email,
             phone: formData.phone,
             password: formData.password,
-            role: "USER",
+            addressLine: formData.addressLine,
             city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+            dateOfBirth: formData.dateOfBirth,
           }),
         }
       );
@@ -66,17 +79,18 @@ function PatientRegister() {
 
       if (!response.ok) {
         throw new Error(
-          data.message || data.error || "Registration failed."
+          data.message || "Patient registration failed."
         );
       }
 
       setMessage(
-        "Account created successfully! Redirecting to login..."
+        data.message || "Patient registered successfully."
       );
 
       setTimeout(() => {
         navigate("/login");
-      }, 1500);
+      }, 2000);
+
     } catch (err) {
       setError(
         err.message ||
@@ -89,8 +103,8 @@ function PatientRegister() {
 
   return (
     <RegistrationLayout
-      title="Patient / Family Registration"
-      subtitle="Create an account to find and request emergency medical resources."
+      title="Patient Registration"
+      subtitle="Create your MedReach patient account."
     >
       {message && (
         <div className="mb-5 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
@@ -117,62 +131,32 @@ function PatientRegister() {
         />
 
         <Input
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Enter email"
+        />
+
+        <Input
           label="Phone Number"
           name="phone"
           type="tel"
           value={formData.phone}
           onChange={handleChange}
-          placeholder="Enter phone number"
+          placeholder="Enter 10-digit phone number"
         />
 
         <Input
-          label="Email Address"
-          name="email"
-          type="email"
-          value={formData.email}
+          label="Date of Birth"
+          name="dateOfBirth"
+          type="date"
+          value={formData.dateOfBirth}
           onChange={handleChange}
-          placeholder="Enter your email"
+          placeholder=""
         />
 
-       <Input
-  label="Date of Birth"
-  name="dateOfBirth"
-  type="date"
-  value={formData.dateOfBirth}
-  onChange={handleChange}
-/>
-
-<Input
-  label="Address Line"
-  name="addressLine"
-  value={formData.addressLine}
-  onChange={handleChange}
-  placeholder="House no., Street, Area"
-/>
-
-<Input
-  label="City"
-  name="city"
-  value={formData.city}
-  onChange={handleChange}
-  placeholder="Enter your city"
-/>
-
-<Input
-  label="State"
-  name="state"
-  value={formData.state}
-  onChange={handleChange}
-  placeholder="Enter your state"
-/>
-
-<Input
-  label="Pincode"
-  name="pincode"
-  value={formData.pincode}
-  onChange={handleChange}
-  placeholder="Enter pincode"
-/>
         <Input
           label="Password"
           name="password"
@@ -192,12 +176,49 @@ function PatientRegister() {
         />
 
         <div className="md:col-span-2">
+          <Input
+            label="Address"
+            name="addressLine"
+            value={formData.addressLine}
+            onChange={handleChange}
+            placeholder="House no., Street, Area"
+          />
+        </div>
+
+        <Input
+          label="City"
+          name="city"
+          value={formData.city}
+          onChange={handleChange}
+          placeholder="Enter city"
+        />
+
+        <Input
+          label="State"
+          name="state"
+          value={formData.state}
+          onChange={handleChange}
+          placeholder="Enter state"
+        />
+
+        <Input
+          label="Pincode"
+          name="pincode"
+          type="text"
+          value={formData.pincode}
+          onChange={handleChange}
+          placeholder="Enter 6-digit pincode"
+        />
+
+        <div className="md:col-span-2">
           <button
             type="submit"
             disabled={loading}
             className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition disabled:bg-red-300"
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading
+              ? "Creating Account..."
+              : "Register Patient"}
           </button>
         </div>
       </form>
@@ -205,12 +226,14 @@ function PatientRegister() {
   );
 }
 
-/* Reusable Layout */
+
+// ================= REGISTRATION LAYOUT =================
 
 function RegistrationLayout({ title, subtitle, children }) {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-2xl">
+
         <Link
           to="/register"
           className="text-sm text-red-600 hover:text-red-700"
@@ -219,6 +242,7 @@ function RegistrationLayout({ title, subtitle, children }) {
         </Link>
 
         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mt-4">
+
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
               {title}
@@ -240,13 +264,15 @@ function RegistrationLayout({ title, subtitle, children }) {
               Login
             </Link>
           </p>
+
         </div>
       </div>
     </div>
   );
 }
 
-/* Reusable Input */
+
+// ================= INPUT COMPONENT =================
 
 function Input({
   label,

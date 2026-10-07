@@ -32,7 +32,7 @@ function HospitalRegister() {
     }));
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     setError("");
@@ -56,20 +56,65 @@ function HospitalRegister() {
       return;
     }
 
-    // Frontend-only for now
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/register?type=HOSPITAL",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+            hospitalName: formData.hospitalName,
+            registrationNumber: formData.registrationNumber,
+            contact: formData.contact,
+            addressLine: formData.addressLine,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+
+            // Backend currently expects text fields,
+            // so send file names instead of actual multipart files.
+            registrationCertificate: formData.registrationCertificate
+              ? `uploads/${formData.registrationCertificate.name}`
+              : "",
+            addressProof: formData.addressProof
+              ? `uploads/${formData.addressProof.name}`
+              : "",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            data.error ||
+            "Hospital registration failed."
+        );
+      }
 
       setMessage(
-        "Hospital registration form submitted successfully. Backend connection will be added later."
+        data.message ||
+          "Hospital registration submitted successfully."
       );
 
       setTimeout(() => {
-        navigate("/login");
+        navigate("/login?role=hospital");
       }, 2000);
-    }, 800);
+    } catch (err) {
+      setError(
+        err.message ||
+          "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -417,7 +462,7 @@ function HospitalRegister() {
             Already have an account?{" "}
 
             <Link
-              to="/login"
+              to="/login?role=hospital"
               className="text-red-600 font-semibold hover:text-red-700"
             >
               Login

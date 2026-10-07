@@ -1,40 +1,172 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 function RequestHistory() {
-  const requests = [
-    {
-      id: "MR-0987",
-      type: "Blood Request",
-      date: "24 Sep 2026, 11:20 AM",
-      resources: "B+ Blood — 1 Unit",
-      status: "Completed",
-      statusStyle: "bg-green-50 text-green-600",
-    },
-    {
-      id: "MR-0975",
-      type: "Emergency Medical Request",
-      date: "22 Sep 2026, 4:45 PM",
-      resources: "Ambulance + Hospital",
-      status: "Completed",
-      statusStyle: "bg-green-50 text-green-600",
-    },
-    {
-      id: "MR-0962",
-      type: "Blood Request",
-      date: "19 Sep 2026, 9:15 AM",
-      resources: "O− Blood — 2 Units",
-      status: "Cancelled",
-      statusStyle: "bg-slate-100 text-slate-600",
-    },
-    {
-      id: "MR-0951",
-      type: "ICU Request",
-      date: "15 Sep 2026, 2:30 PM",
-      resources: "ICU Bed — 1",
-      status: "Completed",
-      statusStyle: "bg-green-50 text-green-600",
-    },
-  ];
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchHistory = useCallback(async () => {
+    const token = sessionStorage.getItem("medreachToken");
+
+    if (!token) {
+      setError("Please login again to view your request history.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/emergency-requests/history`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const text = await response.text();
+
+      let data;
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(
+          "Server returned an invalid response. Please check whether the backend API is running."
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "Unable to load request history."
+        );
+      }
+
+      if (!data?.success) {
+        throw new Error(
+          data?.message || "Unable to load request history."
+        );
+      }
+
+      setRequests(Array.isArray(data.requests) ? data.requests : []);
+    } catch (err) {
+      setError(
+        err.message ||
+          "Unable to load request history. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  const completedCount = useMemo(
+    () =>
+      requests.filter(
+        (request) =>
+          String(request?.status || "").toUpperCase() === "COMPLETED"
+      ).length,
+    [requests]
+  );
+
+  const cancelledCount = useMemo(
+    () =>
+      requests.filter(
+        (request) =>
+          String(request?.status || "").toUpperCase() === "CANCELLED"
+      ).length,
+    [requests]
+  );
+
+  const getStatusStyle = (status) => {
+    const normalizedStatus = String(status || "").toUpperCase();
+
+    if (normalizedStatus === "COMPLETED") {
+      return "bg-green-50 text-green-600";
+    }
+
+    if (normalizedStatus === "CANCELLED") {
+      return "bg-slate-100 text-slate-600";
+    }
+
+    if (
+      normalizedStatus === "ACTIVE" ||
+      normalizedStatus === "SEARCHING"
+    ) {
+      return "bg-yellow-50 text-yellow-600";
+    }
+
+    return "bg-slate-100 text-slate-600";
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "Date unavailable";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getRequestType = (request) => {
+    if (request?.type) return request.type;
+    if (request?.requestType) return request.requestType;
+
+    return "Emergency Medical Request";
+  };
+
+  const getResources = (request) => {
+    if (typeof request?.resources === "string") {
+      return request.resources;
+    }
+
+    if (Array.isArray(request?.items)) {
+      if (request.items.length === 0) {
+        return "No resource details available";
+      }
+
+      return request.items
+        .map((item) => {
+          const resourceType =
+            item?.resourceType ||
+            item?.resource_type ||
+            "Medical Resource";
+
+          const quantity =
+            item?.quantity ??
+            item?.units ??
+            item?.unitsRequired;
+
+          return quantity
+            ? `${resourceType} — ${quantity}`
+            : resourceType;
+        })
+        .join(", ");
+    }
+
+    return "Resource details unavailable";
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -89,6 +221,24 @@ function RequestHistory() {
         </div>
 
 
+        {/* ================= ERROR ================= */}
+        {error && (
+          <div className="mb-8 bg-red-50 border border-red-200 rounded-2xl p-5">
+            <p className="text-sm font-semibold text-red-700">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={fetchHistory}
+              className="mt-3 text-sm font-semibold text-red-600 hover:text-red-700"
+            >
+              Try Again →
+            </button>
+          </div>
+        )}
+
+
         {/* ================= SUMMARY ================= */}
         <div className="grid sm:grid-cols-3 gap-5 mb-8">
 
@@ -98,7 +248,7 @@ function RequestHistory() {
             </p>
 
             <p className="text-3xl font-bold text-slate-900 mt-2">
-              4
+              {loading ? "—" : requests.length}
             </p>
           </div>
 
@@ -109,7 +259,7 @@ function RequestHistory() {
             </p>
 
             <p className="text-3xl font-bold text-green-600 mt-2">
-              3
+              {loading ? "—" : completedCount}
             </p>
           </div>
 
@@ -120,7 +270,7 @@ function RequestHistory() {
             </p>
 
             <p className="text-3xl font-bold text-slate-600 mt-2">
-              1
+              {loading ? "—" : cancelledCount}
             </p>
           </div>
 
@@ -137,96 +287,152 @@ function RequestHistory() {
             </h3>
 
             <span className="text-sm text-slate-500">
-              {requests.length} requests
+              {loading ? "Loading..." : `${requests.length} requests`}
             </span>
 
           </div>
 
 
-          <div className="space-y-4">
+          {/* Loading */}
+          {loading && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
+              <p className="text-slate-600">
+                Loading your request history...
+              </p>
+            </div>
+          )}
 
-            {requests.map((request) => (
 
-              <div
-                key={request.id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition"
+          {/* Empty */}
+          {!loading && !error && requests.length === 0 && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
+
+              <div className="text-4xl mb-4">
+                📋
+              </div>
+
+              <h4 className="text-lg font-bold text-slate-900">
+                No Previous Requests
+              </h4>
+
+              <p className="text-sm text-slate-500 mt-2">
+                Your completed or cancelled emergency requests will appear
+                here.
+              </p>
+
+              <Link
+                to="/user/emergency"
+                className="inline-flex mt-6 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 transition"
               >
+                + Create Emergency Request
+              </Link>
 
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            </div>
+          )}
 
-                  {/* Request Info */}
-                  <div className="flex items-start gap-4">
 
-                    <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-                      📋
-                    </div>
+          {/* Requests */}
+          {!loading && requests.length > 0 && (
+            <div className="space-y-4">
 
-                    <div>
+              {requests.map((request, index) => {
 
-                      <div className="flex flex-wrap items-center gap-3">
+                const requestId =
+                  request?.id ??
+                  request?.requestId ??
+                  `Request ${index + 1}`;
 
-                        <h4 className="font-bold text-slate-900">
-                          Request #{request.id}
-                        </h4>
+                const status =
+                  request?.status || "UNKNOWN";
 
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${request.statusStyle}`}
-                        >
-                          {request.status}
-                        </span>
+                return (
+                  <div
+                    key={requestId}
+                    className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition"
+                  >
+
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+
+                      {/* Request Info */}
+                      <div className="flex items-start gap-4">
+
+                        <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+                          📋
+                        </div>
+
+                        <div>
+
+                          <div className="flex flex-wrap items-center gap-3">
+
+                            <h4 className="font-bold text-slate-900">
+                              Request #{requestId}
+                            </h4>
+
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
+                                status
+                              )}`}
+                            >
+                              {status}
+                            </span>
+
+                          </div>
+
+                          <p className="text-sm text-slate-600 mt-1">
+                            {getRequestType(request)}
+                          </p>
+
+                          <p className="text-sm text-slate-500 mt-1">
+                            {formatDate(
+                              request?.created_at ??
+                                request?.createdAt ??
+                                request?.created
+                            )}
+                          </p>
+
+                        </div>
 
                       </div>
 
-                      <p className="text-sm text-slate-600 mt-1">
-                        {request.type}
+
+                      {/* Resource */}
+                      <div className="lg:text-right">
+
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          Requested Resources
+                        </p>
+
+                        <p className="text-sm font-semibold text-slate-900 mt-1">
+                          {getResources(request)}
+                        </p>
+
+                      </div>
+
+                    </div>
+
+
+                    {/* Bottom */}
+                    <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+                      <p className="text-xs text-slate-400">
+                        Request details retrieved from the MedReach backend.
                       </p>
 
-                      <p className="text-sm text-slate-500 mt-1">
-                        {request.date}
-                      </p>
+                      <Link
+                        to={`/user/request-tracking?requestId=${requestId}`}
+                        className="text-sm font-semibold text-red-600 hover:text-red-700 transition"
+                      >
+                        View Details →
+                      </Link>
 
                     </div>
 
                   </div>
+                );
+              })}
 
-
-                  {/* Resource */}
-                  <div className="lg:text-right">
-
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                      Requested Resources
-                    </p>
-
-                    <p className="text-sm font-semibold text-slate-900 mt-1">
-                      {request.resources}
-                    </p>
-
-                  </div>
-
-                </div>
-
-
-                {/* Bottom */}
-                <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-
-                  <p className="text-xs text-slate-400">
-                    Request details are currently shown as prototype data.
-                  </p>
-
-                  <button
-                    type="button"
-                    className="text-sm font-semibold text-red-600 hover:text-red-700 transition"
-                  >
-                    View Details →
-                  </button>
-
-                </div>
-
-              </div>
-
-            ))}
-
-          </div>
+            </div>
+          )}
 
         </section>
 
@@ -247,19 +453,6 @@ function RequestHistory() {
           >
             + Create Emergency Request
           </Link>
-
-        </div>
-
-
-        {/* Prototype Note */}
-        <div className="mt-8 bg-red-50 border border-red-100 rounded-2xl p-5">
-
-          <p className="text-sm text-red-700 leading-relaxed">
-            <span className="font-semibold">Prototype note:</span>{" "}
-            Request history is currently simulated. In the final system,
-            completed and cancelled requests will be retrieved from the
-            backend database for the logged-in user.
-          </p>
 
         </div>
 

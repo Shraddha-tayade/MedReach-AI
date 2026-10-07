@@ -1,15 +1,26 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [role, setRole] = useState("patient");
+  const initialRole = searchParams.get("role") || "patient";
+
+  const [role, setRole] = useState(initialRole);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const roleTypeMap = {
+    patient: "USER",
+    donor: "DONOR",
+    hospital: "HOSPITAL",
+    bloodbank: "BLOOD_BANK",
+    ambulance: "AMBULANCE",
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,25 +29,19 @@ function Login() {
     setLoading(true);
 
     try {
-      // Other role login APIs are not connected yet
-      if (role !== "patient") {
-        setError(
-          "Login for this role will be connected after the backend API is provided."
-        );
-        setLoading(false);
-        return;
-      }
+      const type = roleTypeMap[role];
 
-      // Patient login
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        `http://localhost:5000/api/auth/login?type=${type}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: identifier,
+            [role === "patient" || role === "donor"
+              ? "email"
+              : "username"]: identifier,
             password: password,
           }),
         }
@@ -50,20 +55,30 @@ function Login() {
         );
       }
 
-      // Save logged-in user information
-      sessionStorage.setItem(
-        "medreachToken",
-        data.token
-      );
+      // Save login token
+      if (data.token) {
+        sessionStorage.setItem("medreachToken", data.token);
+      }
 
-      sessionStorage.setItem(
-        "medreachUser",
-        JSON.stringify(data.user)
-      );
+      // Backend returns account, not user
+      if (data.account) {
+        sessionStorage.setItem(
+          "medreachUser",
+          JSON.stringify(data.account)
+        );
+      }
 
-      // Go to patient dashboard
-      navigate("/user/dashboard");
-
+      // Redirect according to role
+      if (role === "patient") {
+        navigate("/user/dashboard");
+      } else if (role === "donor") {
+        navigate("/Donor/dashboard");
+      } else {
+        // Dashboards for these roles will be connected later
+        setError(
+          "Login successful, but this role's dashboard is not connected yet."
+        );
+      }
     } catch (err) {
       setError(
         err.message ||
@@ -81,7 +96,6 @@ function Login() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-
           <h1 className="text-3xl font-bold text-slate-900">
             Med<span className="text-red-600">Reach</span>
           </h1>
@@ -89,25 +103,19 @@ function Login() {
           <p className="text-slate-500 mt-2">
             Welcome back
           </p>
-
         </div>
 
-        {/* Error Message */}
+        {/* Error */}
         {error && (
           <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
             {error}
           </div>
         )}
 
-        {/* Login Form */}
-        <form
-          onSubmit={handleLogin}
-          className="space-y-5"
-        >
+        <form onSubmit={handleLogin} className="space-y-5">
 
-          {/* Login Role */}
+          {/* Role */}
           <div>
-
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Login As
             </label>
@@ -117,6 +125,7 @@ function Login() {
               onChange={(e) => {
                 setRole(e.target.value);
                 setIdentifier("");
+                setPassword("");
                 setError("");
               }}
               className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
@@ -141,12 +150,10 @@ function Login() {
                 Ambulance
               </option>
             </select>
-
           </div>
 
           {/* Email / Username */}
           <div>
-
             <label className="block text-sm font-medium text-slate-700 mb-2">
               {role === "patient" || role === "donor"
                 ? "Email Address"
@@ -169,12 +176,10 @@ function Login() {
               required
               className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
             />
-
           </div>
 
           {/* Password */}
           <div>
-
             <div className="flex justify-between items-center mb-2">
 
               <label className="text-sm font-medium text-slate-700">
@@ -198,10 +203,9 @@ function Login() {
               required
               className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
             />
-
           </div>
 
-          {/* Login Button */}
+          {/* Login */}
           <button
             type="submit"
             disabled={loading}
@@ -214,7 +218,6 @@ function Login() {
 
         {/* Register */}
         <p className="text-center text-sm text-slate-600 mt-6">
-
           Don't have an account?{" "}
 
           <Link
@@ -223,19 +226,16 @@ function Login() {
           >
             Register
           </Link>
-
         </p>
 
-        {/* Back to Home */}
+        {/* Back */}
         <div className="text-center mt-5">
-
           <Link
             to="/"
             className="text-sm text-slate-500 hover:text-red-600 transition"
           >
             ← Back to Home
           </Link>
-
         </div>
 
       </div>

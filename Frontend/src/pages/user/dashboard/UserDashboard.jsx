@@ -1,5 +1,20 @@
 import { Link } from "react-router-dom";
+
 function UserDashboard() {
+  // Get logged-in user details saved during login
+  const storedUser = sessionStorage.getItem("medreachUser");
+
+  let user = null;
+
+  try {
+    user = storedUser ? JSON.parse(storedUser) : null;
+  } catch (error) {
+    console.error("Unable to read user data:", error);
+  }
+
+  const userName = user?.name || "Patient";
+  const userInitial = userName.charAt(0).toUpperCase();
+
   return (
     <div className="min-h-screen bg-slate-50">
 
@@ -28,17 +43,17 @@ function UserDashboard() {
             <div className="text-right hidden sm:block">
 
               <p className="text-sm font-semibold text-slate-900">
-                Welcome
+                Welcome, {userName}
               </p>
 
               <p className="text-xs text-slate-500">
-                Patient / User
+                Patient
               </p>
 
             </div>
 
             <div className="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-semibold">
-              U
+              {userInitial}
             </div>
 
           </div>
@@ -87,11 +102,11 @@ function UserDashboard() {
             </div>
 
             <Link
-  to="/user/emergency"
-  className="bg-white text-red-600 px-6 py-3 rounded-xl font-semibold hover:bg-red-50 transition whitespace-nowrap"
->
-  Create Emergency Request
-</Link>
+              to="/user/emergency"
+              className="bg-white text-red-600 px-6 py-3 rounded-xl font-semibold hover:bg-red-50 transition whitespace-nowrap"
+            >
+              Create Emergency Request
+            </Link>
 
           </div>
 
@@ -109,95 +124,103 @@ function UserDashboard() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
             {/* Blood */}
-           <Link
-  to="/user/find-blood"
-  className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:border-red-200 transition"
->
-  <div className="text-3xl mb-4">🩸</div>
+            <Link
+              to="/user/find-blood"
+              className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:border-red-200 transition"
+            >
 
-  <h3 className="text-lg font-bold text-slate-900">
-    Find Blood
-  </h3>
+              <div className="text-3xl mb-4">
+                🩸
+              </div>
 
-  <p className="text-sm text-slate-500 mt-2">
-    Search for available blood near your location.
-  </p>
+              <h3 className="text-lg font-bold text-slate-900">
+                Find Blood
+              </h3>
 
-  <p className="text-sm text-red-600 font-semibold mt-4">
-    Find Blood →
-  </p>
-</Link>
+              <p className="text-sm text-slate-500 mt-2">
+                Search for available blood near your location.
+              </p>
+
+              <p className="text-sm text-red-600 font-semibold mt-4">
+                Find Blood →
+              </p>
+
+            </Link>
 
 
             {/* Hospital */}
             <Link
-            to="/user/find-hospital"
-            className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:border-red-200 transition"
->
-  <div className="text-3xl mb-4">🏥</div>
+              to="/user/find-hospital"
+              className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md hover:border-red-200 transition"
+            >
 
-  <h3 className="text-lg font-bold text-slate-900">
-    Find Hospital
-  </h3>
+              <div className="text-3xl mb-4">
+                🏥
+              </div>
 
-  <p className="text-sm text-slate-500 mt-2">
-    Find nearby hospitals and available medical resources.
-  </p>
+              <h3 className="text-lg font-bold text-slate-900">
+                Find Hospital
+              </h3>
 
-  <p className="text-sm text-red-600 font-semibold mt-4">
-    Find Hospital →
-  </p>
-</Link>
+              <p className="text-sm text-slate-500 mt-2">
+                Find nearby hospitals and available medical resources.
+              </p>
 
+              <p className="text-sm text-red-600 font-semibold mt-4">
+                Find Hospital →
+              </p>
 
-           {/* ICU / Oxygen */}
-<Link
-  to="/user/resources"
-  className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-red-200 transition"
->
-
-  <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl mb-5">
-    🫁
-  </div>
-
-  <h4 className="text-lg font-semibold text-slate-900">
-    ICU & Oxygen
-  </h4>
-
-  <p className="text-sm text-slate-600 mt-2">
-    Check available ICU beds and oxygen resources.
-  </p>
-
-  <p className="mt-5 text-red-600 font-semibold text-sm">
-    Find Resources →
-  </p>
-
-</Link>
+            </Link>
 
 
-        {/* Ambulance */}
-<Link
-  to="/user/find-ambulance"
-  className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-red-200 transition"
->
+            {/* ICU / Oxygen */}
+            <Link
+              to="/user/resources"
+              className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-red-200 transition"
+            >
 
-  <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl mb-5">
-    🚑
-  </div>
+              <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl mb-5">
+                🫁
+              </div>
 
-  <h4 className="text-lg font-semibold text-slate-900">
-    Find Ambulance
-  </h4>
+              <h4 className="text-lg font-semibold text-slate-900">
+                ICU & Oxygen
+              </h4>
 
-  <p className="text-sm text-slate-600 mt-2">
-    Find available ambulances for emergency transportation.
-  </p>
+              <p className="text-sm text-slate-600 mt-2">
+                Check available ICU beds and oxygen resources.
+              </p>
 
-  <p className="mt-5 text-red-600 font-semibold text-sm">
-    Find Ambulance →
-  </p>
+              <p className="mt-5 text-red-600 font-semibold text-sm">
+                Find Resources →
+              </p>
 
-</Link>
+            </Link>
+
+
+            {/* Ambulance */}
+            <Link
+              to="/user/find-ambulance"
+              className="block bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-red-200 transition"
+            >
+
+              <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl mb-5">
+                🚑
+              </div>
+
+              <h4 className="text-lg font-semibold text-slate-900">
+                Find Ambulance
+              </h4>
+
+              <p className="text-sm text-slate-600 mt-2">
+                Find available ambulances for emergency transportation.
+              </p>
+
+              <p className="mt-5 text-red-600 font-semibold text-sm">
+                Find Ambulance →
+              </p>
+
+            </Link>
 
           </div>
 
@@ -214,11 +237,11 @@ function UserDashboard() {
             </h3>
 
             <Link
-  to="/user/active-requests"
-  className="text-red-600 text-sm font-semibold hover:text-red-700 transition"
->
-  View All
-</Link>
+              to="/user/active-requests"
+              className="text-red-600 text-sm font-semibold hover:text-red-700 transition"
+            >
+              View All
+            </Link>
 
           </div>
 
