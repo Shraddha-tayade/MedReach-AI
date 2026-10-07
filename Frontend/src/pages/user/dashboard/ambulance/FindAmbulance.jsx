@@ -1,47 +1,83 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function FindAmbulance() {
-  const ambulances = [
-    {
-      id: 1,
-      name: "City Care Ambulance",
-      type: "Basic Life Support",
-      distance: "2.1 km",
-      eta: "8 min",
-      status: "Available",
-      phone: "+91 98765 43210",
-    },
-    {
-      id: 2,
-      name: "LifeLine Emergency Services",
-      type: "Advanced Life Support",
-      distance: "3.4 km",
-      eta: "12 min",
-      status: "Available",
-      phone: "+91 98765 12345",
-    },
-    {
-      id: 3,
-      name: "Hope Ambulance Services",
-      type: "Patient Transport",
-      distance: "5.2 km",
-      eta: "18 min",
-      status: "Available",
-      phone: "+91 99887 66554",
-    },
-  ];
+  const [ambulanceType, setAmbulanceType] = useState("");
+  const [radius, setRadius] = useState("");
+
+  const [location, setLocation] = useState("");
+  const [locationMode, setLocationMode] = useState("manual");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  const [searched, setSearched] = useState(false);
+
+  const useCurrentLocation = () => {
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError(
+        "Location detection is not supported by your browser."
+      );
+      return;
+    }
+
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+
+        setLocationMode("current");
+        setLocation("");
+        setLocationLoading(false);
+      },
+      () => {
+        setLocationLoading(false);
+        setLocationError(
+          "Unable to access your location. Please allow location permission or enter your location manually."
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  const handleManualLocation = (e) => {
+    setLocation(e.target.value);
+    setLocationMode("manual");
+
+    setLatitude(null);
+    setLongitude(null);
+    setLocationError("");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearched(true);
+
+    // Later backend can receive:
+    // latitude, longitude, location, ambulanceType, radius
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* ================= HEADER ================= */}
-      <header className="bg-white border-b border-slate-200 px-8 py-5">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
 
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-
-          {/* Logo */}
-          <Link to="/user/dashboard" className="flex items-center gap-2">
-
+          <Link
+            to="/user/dashboard"
+            className="flex items-center gap-2"
+          >
             <div className="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold">
               M
             </div>
@@ -49,199 +85,181 @@ function FindAmbulance() {
             <h1 className="text-2xl font-bold text-slate-900">
               Med<span className="text-red-600">Reach</span>
             </h1>
-
           </Link>
 
-          {/* Back */}
           <Link
             to="/user/dashboard"
-            className="text-sm font-semibold text-slate-600 hover:text-red-600 transition"
+            className="text-sm font-medium text-slate-600 hover:text-red-600"
           >
             ← Back to Dashboard
           </Link>
 
         </div>
-
       </header>
 
+      <main className="max-w-6xl mx-auto px-6 py-10">
 
-      {/* ================= MAIN ================= */}
-      <main className="max-w-7xl mx-auto px-8 py-10">
-
-        {/* Heading */}
-        <div className="mb-10">
-
-          <p className="text-red-600 font-semibold mb-2">
-            AMBULANCE SERVICES
+        <div className="mb-8">
+          <p className="text-red-600 font-semibold text-sm mb-2">
+            AMBULANCE SEARCH
           </p>
 
           <h2 className="text-3xl font-bold text-slate-900">
-            Find an Ambulance
+            Find Ambulance
           </h2>
 
           <p className="text-slate-600 mt-2">
-            Find available ambulances for emergency transportation near you.
+            Find an available ambulance near your pickup location.
           </p>
-
         </div>
 
+        <section className="bg-white rounded-2xl border border-slate-200 p-7">
 
-        {/* ================= SEARCH / FILTER ================= */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-8">
+          <h3 className="text-xl font-bold text-slate-900 mb-6">
+            Search Ambulances
+          </h3>
 
-          <div className="grid md:grid-cols-3 gap-5">
+          <form onSubmit={handleSearch}>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+            {/* Pickup Location */}
+            <div className="mb-7">
+
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Pickup Location
               </label>
 
               <input
                 type="text"
-                placeholder="Enter pickup location"
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500"
+                value={location}
+                onChange={handleManualLocation}
+                placeholder="Enter full pickup location"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
               />
-            </div>
 
+              <p className="text-xs text-slate-400 mt-2">
+                Example: Pune, Maharashtra
+              </p>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Emergency Type
-              </label>
-
-              <select
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500"
-              >
-                <option>Any Emergency</option>
-                <option>Accident</option>
-                <option>Medical Emergency</option>
-                <option>Patient Transfer</option>
-              </select>
-            </div>
-
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Ambulance Type
-              </label>
-
-              <select
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500"
-              >
-                <option>Any Type</option>
-                <option>Basic Life Support</option>
-                <option>Advanced Life Support</option>
-                <option>Patient Transport</option>
-              </select>
-            </div>
-
-          </div>
-
-
-          <button
-            type="button"
-            className="mt-5 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 transition"
-          >
-            Search Ambulances
-          </button>
-
-        </div>
-
-
-        {/* ================= RESULTS ================= */}
-        <section>
-
-          <div className="flex items-center justify-between mb-5">
-
-            <h3 className="text-xl font-bold text-slate-900">
-              Available Ambulances
-            </h3>
-
-            <span className="text-sm text-slate-500">
-              {ambulances.length} ambulances found
-            </span>
-
-          </div>
-
-
-          <div className="grid lg:grid-cols-3 gap-6">
-
-            {ambulances.map((ambulance) => (
-
-              <div
-                key={ambulance.id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-lg hover:border-red-200 transition"
-              >
-
-                {/* Icon + Status */}
-                <div className="flex items-start justify-between mb-5">
-
-                  <div className="w-14 h-14 bg-orange-50 rounded-xl flex items-center justify-center text-3xl">
-                    🚑
-                  </div>
-
-                  <span className="px-3 py-1 bg-green-50 text-green-600 text-xs font-semibold rounded-full">
-                    {ambulance.status}
-                  </span>
-
-                </div>
-
-
-                {/* Name */}
-                <h4 className="text-lg font-bold text-slate-900">
-                  {ambulance.name}
-                </h4>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  {ambulance.type}
-                </p>
-
-
-                {/* Details */}
-                <div className="mt-5 space-y-3">
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">
-                      Distance
-                    </span>
-
-                    <span className="font-semibold text-slate-900">
-                      {ambulance.distance}
-                    </span>
-                  </div>
-
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">
-                      Estimated Arrival
-                    </span>
-
-                    <span className="font-semibold text-green-600">
-                      {ambulance.eta}
-                    </span>
-                  </div>
-
-                </div>
-
-
-                {/* Action */}
-                <Link
-                  to={`/user/ambulance-details?id=${ambulance.id}`}
-                  className="block text-center mt-6 bg-red-600 text-white py-3 rounded-xl font-semibold hover:bg-red-700 transition"
-                >
-                  View Details
-                </Link>
-
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-slate-200"></div>
+                <span className="text-xs text-slate-400">or</span>
+                <div className="flex-1 h-px bg-slate-200"></div>
               </div>
 
-            ))}
+              <button
+                type="button"
+                onClick={useCurrentLocation}
+                disabled={locationLoading}
+                className={`w-full border rounded-xl p-4 text-left transition ${
+                  locationMode === "current"
+                    ? "border-green-500 bg-green-50"
+                    : "border-slate-200 hover:border-red-400 hover:bg-red-50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
 
-          </div>
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
+                      locationMode === "current"
+                        ? "bg-green-100"
+                        : "bg-red-50"
+                    }`}
+                  >
+                    {locationMode === "current" ? "✓" : "📍"}
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      {locationLoading
+                        ? "Detecting your location..."
+                        : locationMode === "current"
+                        ? "Current Location Detected"
+                        : "Use My Current Location"}
+                    </p>
+
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      {locationMode === "current"
+                        ? "Browser location selected"
+                        : "Let your browser detect your location"}
+                    </p>
+                  </div>
+
+                </div>
+              </button>
+
+              {locationError && (
+                <p className="text-sm text-red-600 mt-2">
+                  {locationError}
+                </p>
+              )}
+
+            </div>
+
+            {/* Filters */}
+            <div className="grid md:grid-cols-2 gap-5">
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Ambulance Type
+                </label>
+
+                <select
+                  value={ambulanceType}
+                  onChange={(e) =>
+                    setAmbulanceType(e.target.value)
+                  }
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <option value="">
+                    Select ambulance type
+                  </option>
+                  <option>BLS</option>
+                  <option>ALS</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Search Radius
+                </label>
+
+                <select
+                  value={radius}
+                  onChange={(e) => setRadius(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <option value="">
+                    Select radius
+                  </option>
+                  <option value="5">Within 5 km</option>
+                  <option value="10">Within 10 km</option>
+                  <option value="25">Within 25 km</option>
+                  <option value="50">Within 50 km</option>
+                </select>
+              </div>
+
+            </div>
+
+            <button
+              type="submit"
+              className="w-full mt-6 py-3.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition"
+            >
+              Search Ambulances
+            </button>
+
+          </form>
+
+          {searched && (
+            <div className="mt-6 p-4 bg-slate-50 rounded-xl text-sm text-slate-600">
+              Ambulance search submitted. Available ambulances will appear here.
+            </div>
+          )}
 
         </section>
 
       </main>
-
     </div>
   );
 }

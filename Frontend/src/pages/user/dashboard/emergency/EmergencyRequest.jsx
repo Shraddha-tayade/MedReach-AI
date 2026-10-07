@@ -11,6 +11,15 @@ function EmergencyRequest() {
 
   const [submitted, setSubmitted] = useState(false);
 
+  const [manualLocation, setManualLocation] = useState("");
+  const [locationMode, setLocationMode] = useState("");
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
+  const [coordinates, setCoordinates] = useState({
+    latitude: null,
+    longitude: null,
+  });
+
   const toggleResource = (resource) => {
     setResources({
       ...resources,
@@ -18,8 +27,87 @@ function EmergencyRequest() {
     });
   };
 
+  // ================= LOCATION =================
+
+  const handleManualLocation = (e) => {
+    setManualLocation(e.target.value);
+    setLocationMode("manual");
+    setLocationError("");
+
+    // Manual location does not have browser coordinates.
+    setCoordinates({
+      latitude: null,
+      longitude: null,
+    });
+  };
+
+  const useCurrentLocation = () => {
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError(
+        "Location detection is not supported by your browser."
+      );
+      return;
+    }
+
+    setLocationLoading(true);
+    setLocationMode("");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        setCoordinates({
+          latitude,
+          longitude,
+        });
+
+        setManualLocation("");
+        setLocationMode("current");
+        setLocationLoading(false);
+      },
+      (error) => {
+        setLocationLoading(false);
+
+        if (error.code === 1) {
+          setLocationError(
+            "Location permission was denied. Please allow location access or enter your location manually."
+          );
+        } else if (error.code === 2) {
+          setLocationError(
+            "Unable to detect your location. Please try again or enter it manually."
+          );
+        } else {
+          setLocationError(
+            "Unable to detect your location. Please try again."
+          );
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    /*
+      Later, when backend integration is added:
+
+      If current location is selected:
+      coordinates.latitude
+      coordinates.longitude
+
+      If manual location is entered:
+      manualLocation
+
+      For now the form remains frontend-only.
+    */
+
     setSubmitted(true);
   };
 
@@ -28,7 +116,6 @@ function EmergencyRequest() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
-
         <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-10 text-center">
 
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
@@ -43,9 +130,7 @@ function EmergencyRequest() {
             MedReach is now searching for the medical resources you requested.
           </p>
 
-          {/* Request ID */}
           <div className="bg-slate-50 rounded-xl p-5 mt-8">
-
             <p className="text-sm text-slate-500">
               Request ID
             </p>
@@ -53,10 +138,8 @@ function EmergencyRequest() {
             <p className="text-xl font-bold text-red-600 mt-1">
               MR-2026-001
             </p>
-
           </div>
 
-          {/* Status */}
           <div className="text-left mt-8 space-y-4">
 
             <div className="flex items-center gap-4">
@@ -75,7 +158,6 @@ function EmergencyRequest() {
               </div>
             </div>
 
-
             <div className="flex items-center gap-4">
               <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
                 🔄
@@ -91,7 +173,6 @@ function EmergencyRequest() {
                 </p>
               </div>
             </div>
-
 
             <div className="flex items-center gap-4 opacity-50">
               <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
@@ -111,31 +192,28 @@ function EmergencyRequest() {
 
           </div>
 
+          <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
 
-       <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
+            <Link
+              to="/user/request-tracking"
+              className="px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition text-center"
+            >
+              Track Request
+            </Link>
 
-  <Link
-    to="/user/request-tracking"
-    className="px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition text-center"
-  >
-    Track Request
-  </Link>
+            <Link
+              to="/user/dashboard"
+              className="px-8 py-3 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition text-center"
+            >
+              Back to Dashboard
+            </Link>
 
-  <Link
-    to="/user/dashboard"
-    className="px-8 py-3 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 transition text-center"
-  >
-    Back to Dashboard
-  </Link>
-
-</div>
+          </div>
 
         </div>
-
       </div>
     );
   }
-
 
   // ================= REQUEST FORM =================
 
@@ -148,8 +226,10 @@ function EmergencyRequest() {
 
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
 
-          <Link to="/user/dashboard" className="flex items-center gap-2">
-
+          <Link
+            to="/user/dashboard"
+            className="flex items-center gap-2"
+          >
             <div className="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold">
               M
             </div>
@@ -157,7 +237,6 @@ function EmergencyRequest() {
             <h1 className="text-2xl font-bold text-slate-900">
               Med<span className="text-red-600">Reach</span>
             </h1>
-
           </Link>
 
           <Link
@@ -171,12 +250,9 @@ function EmergencyRequest() {
 
       </header>
 
-
       {/* MAIN */}
 
       <main className="max-w-5xl mx-auto px-6 py-10">
-
-        {/* TITLE */}
 
         <div className="mb-8">
 
@@ -189,14 +265,13 @@ function EmergencyRequest() {
           </h2>
 
           <p className="text-slate-600 mt-2">
-            Select the medical resources you need. MedReach will help coordinate them from one request.
+            Select the medical resources you need. MedReach will help
+            coordinate them from one request.
           </p>
 
         </div>
 
-
         <form onSubmit={handleSubmit} className="space-y-8">
-
 
           {/* ================= BASIC INFORMATION ================= */}
 
@@ -220,7 +295,6 @@ function EmergencyRequest() {
                   required
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500"
                 >
-
                   <option value="">
                     Select emergency type
                   </option>
@@ -240,11 +314,9 @@ function EmergencyRequest() {
                   <option>
                     Other
                   </option>
-
                 </select>
 
               </div>
-
 
               {/* Priority */}
 
@@ -258,7 +330,6 @@ function EmergencyRequest() {
                   required
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500"
                 >
-
                   <option value="">
                     Select priority
                   </option>
@@ -274,13 +345,11 @@ function EmergencyRequest() {
                   <option>
                     Critical
                   </option>
-
                 </select>
 
               </div>
 
-
-              {/* Location */}
+              {/* ================= LOCATION ================= */}
 
               <div className="md:col-span-2">
 
@@ -288,19 +357,114 @@ function EmergencyRequest() {
                   Current Location
                 </label>
 
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter your current location"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500"
-                />
+                <div className="border border-slate-300 rounded-xl p-4 bg-white">
+
+                  {/* Manual Location */}
+
+                  <div className="relative">
+
+                    <input
+                      type="text"
+                      value={manualLocation}
+                      onChange={handleManualLocation}
+                      placeholder="Enter full location manually..."
+                      className="w-full px-4 py-3 pr-12 border border-slate-200 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                    />
+
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                      📍
+                    </span>
+
+                  </div>
+
+                  {/* OR */}
+
+                  <div className="flex items-center gap-3 my-4">
+
+                    <div className="flex-1 h-px bg-slate-200" />
+
+                    <span className="text-xs font-medium text-slate-400">
+                      OR
+                    </span>
+
+                    <div className="flex-1 h-px bg-slate-200" />
+
+                  </div>
+
+                  {/* Current Location Button */}
+
+                  <button
+                    type="button"
+                    onClick={useCurrentLocation}
+                    disabled={locationLoading}
+                    className={`w-full flex items-center gap-4 p-4 rounded-lg border transition text-left ${
+                      locationMode === "current"
+                        ? "border-green-300 bg-green-50"
+                        : "border-slate-200 hover:border-red-300 hover:bg-red-50"
+                    }`}
+                  >
+
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
+                        locationMode === "current"
+                          ? "bg-green-100"
+                          : "bg-red-100"
+                      }`}
+                    >
+                      {locationMode === "current" ? "✓" : "📍"}
+                    </div>
+
+                    <div className="flex-1">
+
+                      <p className="font-semibold text-slate-900">
+
+                        {locationLoading
+                          ? "Detecting your location..."
+                          : locationMode === "current"
+                          ? "Current Location Detected"
+                          : "Use My Current Location"}
+
+                      </p>
+
+                      <p className="text-sm text-slate-500 mt-0.5">
+
+                        {locationLoading
+                          ? "Please allow location access in your browser."
+                          : locationMode === "current"
+                          ? "Your browser location is ready to use."
+                          : "Let your browser detect your current location."}
+
+                      </p>
+
+                    </div>
+
+                  </button>
+
+                  {/* Error */}
+
+                  {locationError && (
+                    <p className="text-sm text-red-600 mt-3">
+                      {locationError}
+                    </p>
+                  )}
+
+                  {/* Selected coordinates are intentionally hidden */}
+
+                  {locationMode === "current" &&
+                    coordinates.latitude !== null &&
+                    coordinates.longitude !== null && (
+                      <p className="text-xs text-green-600 mt-3">
+                        Location successfully detected.
+                      </p>
+                    )}
+
+                </div>
 
               </div>
 
             </div>
 
           </section>
-
 
           {/* ================= RESOURCES ================= */}
 
@@ -314,9 +478,7 @@ function EmergencyRequest() {
               Select all resources required for this emergency.
             </p>
 
-
             <div className="space-y-4">
-
 
               {/* BLOOD */}
 
@@ -355,7 +517,6 @@ function EmergencyRequest() {
                       Request compatible blood from nearby verified providers.
                     </p>
 
-
                     {resources.blood && (
 
                       <div className="grid sm:grid-cols-2 gap-4 mt-5">
@@ -381,7 +542,6 @@ function EmergencyRequest() {
 
                         </div>
 
-
                         <div>
 
                           <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -406,7 +566,6 @@ function EmergencyRequest() {
                 </label>
 
               </div>
-
 
               {/* ICU */}
 
@@ -445,7 +604,6 @@ function EmergencyRequest() {
                       Find hospitals with available ICU beds.
                     </p>
 
-
                     {resources.icu && (
 
                       <div className="mt-5">
@@ -470,7 +628,6 @@ function EmergencyRequest() {
                 </label>
 
               </div>
-
 
               {/* OXYGEN */}
 
@@ -509,7 +666,6 @@ function EmergencyRequest() {
                       Find facilities with available oxygen support.
                     </p>
 
-
                     {resources.oxygen && (
 
                       <div className="mt-5">
@@ -533,7 +689,6 @@ function EmergencyRequest() {
                 </label>
 
               </div>
-
 
               {/* AMBULANCE */}
 
@@ -572,7 +727,6 @@ function EmergencyRequest() {
                       Request an available ambulance for emergency transportation.
                     </p>
 
-
                     {resources.ambulance && (
 
                       <div className="grid sm:grid-cols-2 gap-4 mt-5">
@@ -590,7 +744,6 @@ function EmergencyRequest() {
                           />
 
                         </div>
-
 
                         <div>
 
@@ -620,7 +773,6 @@ function EmergencyRequest() {
 
           </section>
 
-
           {/* ================= ADDITIONAL INFORMATION ================= */}
 
           <section className="bg-white rounded-2xl border border-slate-200 p-7">
@@ -636,7 +788,6 @@ function EmergencyRequest() {
             />
 
           </section>
-
 
           {/* ================= SUBMIT ================= */}
 

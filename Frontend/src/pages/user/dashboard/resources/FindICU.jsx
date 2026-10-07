@@ -1,40 +1,78 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function FindICU() {
-  const hospitals = [
-    {
-      id: 1,
-      name: "City Care Hospital",
-      location: "Amravati",
-      beds: 4,
-      distance: "2.4 km",
-      status: "Available",
-    },
-    {
-      id: 2,
-      name: "LifeLine Multispeciality Hospital",
-      location: "Amravati",
-      beds: 2,
-      distance: "4.1 km",
-      status: "Available",
-    },
-    {
-      id: 3,
-      name: "Hope Medical Center",
-      location: "Amravati",
-      beds: 1,
-      distance: "5.8 km",
-      status: "Limited",
-    },
-  ];
+  const [bedsRequired, setBedsRequired] = useState("");
+  const [radius, setRadius] = useState("");
+
+  const [location, setLocation] = useState("");
+  const [locationMode, setLocationMode] = useState("manual");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  const [searched, setSearched] = useState(false);
+
+  const useCurrentLocation = () => {
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError(
+        "Location detection is not supported by your browser."
+      );
+      return;
+    }
+
+    setLocationLoading(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+
+        setLocationMode("current");
+        setLocation("");
+        setLocationLoading(false);
+      },
+      () => {
+        setLocationLoading(false);
+        setLocationError(
+          "Unable to access your location. Please allow location permission or enter your location manually."
+        );
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  const handleManualLocation = (e) => {
+    setLocation(e.target.value);
+    setLocationMode("manual");
+
+    setLatitude(null);
+    setLongitude(null);
+    setLocationError("");
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearched(true);
+
+    // Later backend can receive:
+    // latitude, longitude, bedsRequired, radius
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* ================= HEADER ================= */}
-      <header className="bg-white border-b border-slate-200 px-8 py-5">
-
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
 
           <Link
             to="/user/dashboard"
@@ -50,194 +88,173 @@ function FindICU() {
           </Link>
 
           <Link
-            to="/user/resources"
-            className="text-sm font-semibold text-slate-600 hover:text-red-600 transition"
+            to="/user/dashboard"
+            className="text-sm font-medium text-slate-600 hover:text-red-600"
           >
-            ← Back to Resources
+            ← Back to Dashboard
           </Link>
 
         </div>
-
       </header>
 
+      <main className="max-w-6xl mx-auto px-6 py-10">
 
-      {/* ================= MAIN ================= */}
-      <main className="max-w-7xl mx-auto px-8 py-10">
-
-        {/* Heading */}
-        <div className="mb-10">
-
-          <p className="text-red-600 font-semibold mb-2">
+        <div className="mb-8">
+          <p className="text-red-600 font-semibold text-sm mb-2">
             ICU AVAILABILITY
           </p>
 
           <h2 className="text-3xl font-bold text-slate-900">
-            Find Available ICU Beds
+            Find ICU Beds
           </h2>
 
           <p className="text-slate-600 mt-2">
-            Search hospitals with currently available ICU beds.
+            Find hospitals with available ICU beds near you.
           </p>
-
         </div>
 
+        <section className="bg-white rounded-2xl border border-slate-200 p-7">
 
-        {/* ================= FILTERS ================= */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-8">
+          <h3 className="text-xl font-bold text-slate-900 mb-6">
+            Search ICU Availability
+          </h3>
 
-          <div className="grid md:grid-cols-2 gap-5">
+          <form onSubmit={handleSearch}>
 
             {/* Location */}
-            <div>
+            <div className="mb-7">
 
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Location
               </label>
 
               <input
                 type="text"
-                placeholder="Enter city or location"
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500"
+                value={location}
+                onChange={handleManualLocation}
+                placeholder="Enter full location"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
               />
 
-            </div>
+              <p className="text-xs text-slate-400 mt-2">
+                Example: Pune, Maharashtra
+              </p>
 
-
-            {/* ICU Type */}
-            <div>
-
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                ICU Type
-              </label>
-
-              <select
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500"
-              >
-                <option>Any ICU</option>
-                <option>General ICU</option>
-                <option>ICU with Ventilator</option>
-                <option>Cardiac ICU</option>
-              </select>
-
-            </div>
-
-          </div>
-
-
-          <button
-            type="button"
-            className="mt-5 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 transition"
-          >
-            Search ICU Beds
-          </button>
-
-        </div>
-
-
-        {/* ================= RESULTS ================= */}
-        <section>
-
-          <div className="flex items-center justify-between mb-5">
-
-            <h3 className="text-xl font-bold text-slate-900">
-              Hospitals with ICU Availability
-            </h3>
-
-            <span className="text-sm text-slate-500">
-              {hospitals.length} hospitals found
-            </span>
-
-          </div>
-
-
-          <div className="grid lg:grid-cols-3 gap-6">
-
-            {hospitals.map((hospital) => (
-
-              <div
-                key={hospital.id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-lg hover:border-red-200 transition"
-              >
-
-                {/* Card Top */}
-                <div className="flex items-start justify-between mb-5">
-
-                  <div className="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center text-3xl">
-                    🫁
-                  </div>
-
-                  <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                      hospital.status === "Available"
-                        ? "bg-green-50 text-green-600"
-                        : "bg-yellow-50 text-yellow-600"
-                    }`}
-                  >
-                    {hospital.status}
-                  </span>
-
-                </div>
-
-
-                {/* Hospital */}
-                <h4 className="text-lg font-bold text-slate-900">
-                  {hospital.name}
-                </h4>
-
-                <p className="text-sm text-slate-500 mt-1">
-                  {hospital.location}
-                </p>
-
-
-                {/* Details */}
-                <div className="mt-5 space-y-3">
-
-                  <div className="flex justify-between text-sm">
-
-                    <span className="text-slate-500">
-                      ICU Beds
-                    </span>
-
-                    <span className="font-semibold text-slate-900">
-                      {hospital.beds}
-                    </span>
-
-                  </div>
-
-
-                  <div className="flex justify-between text-sm">
-
-                    <span className="text-slate-500">
-                      Distance
-                    </span>
-
-                    <span className="font-semibold text-slate-900">
-                      {hospital.distance}
-                    </span>
-
-                  </div>
-
-                </div>
-
-
-                {/* Action */}
-                <button
-                  type="button"
-                  className="w-full mt-6 border border-red-200 text-red-600 py-3 rounded-xl font-semibold hover:bg-red-50 transition"
-                >
-                  View Hospital
-                </button>
-
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-slate-200"></div>
+                <span className="text-xs text-slate-400">or</span>
+                <div className="flex-1 h-px bg-slate-200"></div>
               </div>
 
-            ))}
+              <button
+                type="button"
+                onClick={useCurrentLocation}
+                disabled={locationLoading}
+                className={`w-full border rounded-xl p-4 text-left transition ${
+                  locationMode === "current"
+                    ? "border-green-500 bg-green-50"
+                    : "border-slate-200 hover:border-red-400 hover:bg-red-50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
 
-          </div>
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${
+                      locationMode === "current"
+                        ? "bg-green-100"
+                        : "bg-red-50"
+                    }`}
+                  >
+                    {locationMode === "current" ? "✓" : "📍"}
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-slate-900">
+                      {locationLoading
+                        ? "Detecting your location..."
+                        : locationMode === "current"
+                        ? "Current Location Detected"
+                        : "Use My Current Location"}
+                    </p>
+
+                    <p className="text-sm text-slate-500 mt-0.5">
+                      {locationMode === "current"
+                        ? "Browser location selected"
+                        : "Let your browser detect your location"}
+                    </p>
+                  </div>
+
+                </div>
+              </button>
+
+              {locationError && (
+                <p className="text-sm text-red-600 mt-2">
+                  {locationError}
+                </p>
+              )}
+
+            </div>
+
+            {/* Filters */}
+            <div className="grid md:grid-cols-2 gap-5">
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  ICU Beds Required
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={bedsRequired}
+                  onChange={(e) => setBedsRequired(e.target.value)}
+                  placeholder="Number of beds"
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Search Radius
+                </label>
+
+                <select
+                  value={radius}
+                  onChange={(e) => setRadius(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                >
+                  <option value="">
+                    Select radius
+                  </option>
+                  <option value="5">Within 5 km</option>
+                  <option value="10">Within 10 km</option>
+                  <option value="25">Within 25 km</option>
+                  <option value="50">Within 50 km</option>
+                </select>
+              </div>
+
+            </div>
+
+            <button
+              type="submit"
+              className="w-full mt-6 py-3.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition"
+            >
+              Search ICU Beds
+            </button>
+
+          </form>
+
+          {searched && (
+            <div className="mt-6 p-4 bg-slate-50 rounded-xl text-sm text-slate-600">
+              ICU search submitted. Available ICU facilities will appear here.
+            </div>
+          )}
 
         </section>
 
       </main>
-
     </div>
   );
 }
