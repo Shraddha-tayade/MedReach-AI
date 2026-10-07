@@ -5,7 +5,7 @@ require("dotenv").config();
 require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const authenticateToken = require("./middleware/authMiddleware");
-
+const resourceRoutes = require("./routes/resourceRoutes");
 const profilesRoutes = require("./routes/profilesRoutes");
 const bloodInventoryRoutes = require("./routes/bloodInventoryRoutes");
 const bloodBankHistoryRoutes =require("./routes/bloodBankHistoryRoutes");
@@ -19,12 +19,14 @@ const hospitalEmergencyRequestRoutes = require("./routes/hospitalEmergencyReques
 const hospitalEmergencyResponseRoutes = require("./routes/hospitalEmergencyResponseRoutes");
 const hospitalEmergencyHistoryRoutes = require("./routes/hospitalEmergencyHistoryRoutes");
 
+const emergencyRequestRoutes = require("./routes/emergencyRequestRoutes");
+const donorRequestRoutes =require("./routes/donorRequestRoutes");
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(cors());
-app.use(express.json());
+// app.use(cors());
+// app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profilesRoutes);
@@ -43,6 +45,13 @@ app.use("/api/hospital/emergency-bed-requests",hospitalEmergencyRequestRoutes);
 app.use("/api/hospital/emergency-bed-responses",hospitalEmergencyResponseRoutes);
 app.use( "/api/hospital/emergency-history", hospitalEmergencyHistoryRoutes);
 
+app.use("/api/resources", resourceRoutes);
+app.use("/api/emergency-requests", emergencyRequestRoutes);
+app.use("/api/donor",donorRequestRoutes);
+app.use("/api/donor",donorRequestRoutes);
+// app.use("/api/auth", authRoutes);
+// app.use("/api/profile", profilesRoutes);
+// app.use("/api/blood-bank/inventory", bloodInventoryRoutes);
 
 app.get("/", (req, res) => {
     res.json({

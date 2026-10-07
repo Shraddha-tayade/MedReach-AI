@@ -11,7 +11,7 @@ const createHospital = async (
     state,
     pincode,
     registrationCertificate,
-    addressProof
+    addressProof, latitude, longitude
 ) => {
     const result = await pool.query(
         `INSERT INTO hospitals
@@ -26,9 +26,12 @@ const createHospital = async (
             state,
             pincode,
             registration_certificate,
-            address_proof
+            address_proof, 
+            location
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+        ST_SetSRID(ST_MakePoint($13, $12), 4326)::geography
+        )
         RETURNING
             id,
             username,
@@ -40,7 +43,9 @@ const createHospital = async (
             state,
             pincode,
             verification_status,
-            created_at`,
+            created_at,
+            ST_Y(location::geometry) AS latitude,
+            ST_X(location::geometry) AS longitude`,
         [
             username,
             password,
@@ -52,7 +57,9 @@ const createHospital = async (
             state,
             pincode,
             registrationCertificate,
-            addressProof
+            addressProof,
+            latitude, 
+            longitude
         ]
     );
 
