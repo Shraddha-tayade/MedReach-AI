@@ -2,34 +2,49 @@ const express = require("express");
 
 const router = express.Router();
 
-const authenticateToken = require("../middleware/authMiddleware");
+//console.log("Blood inventory routes loaded");
+
+const authenticateToken =
+    require("../middleware/authMiddleware");
 
 const {
     createBloodInventory,
     getInventory,
     updateUnits,
-    discardInventory
+    useBloodUnits
 } = require("../controllers/bloodInventoryController");
 
 
-// POST /api/blood-bank/inventory
-router.post("/", authenticateToken, (req, res, next) => {
-    console.log("🔥 POST /api/blood-bank/inventory ROUTE HIT");
-    console.log("Request body:", req.body);
-    next();
-}, createBloodInventory);
+// ADD BLOOD INVENTORY
+router.post(
+    "/",
+    authenticateToken,
+    createBloodInventory
+);
 
 
-// GET /api/blood-bank/inventory
-router.get("/", authenticateToken, getInventory);
+// GET BLOOD INVENTORY
+router.get(
+    "/",
+    authenticateToken,
+    getInventory
+);
 
 
-// PATCH /api/blood-bank/inventory/:id
-router.patch("/:id", authenticateToken, updateUnits);
+// UPDATE AVAILABLE UNITS
+router.patch(
+    "/:id",
+    authenticateToken,
+    updateUnits
+);
 
 
-// PATCH /api/blood-bank/inventory/:id/discard
-router.patch("/:id/discard", authenticateToken, discardInventory);
+// USE BLOOD
+router.patch(
+    "/:id/use",
+    authenticateToken,
+    useBloodUnits
+);
 
 
 module.exports = router;

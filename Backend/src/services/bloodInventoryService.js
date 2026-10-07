@@ -2,8 +2,13 @@ const {
     createInventory,
     getInventoryByBloodBank,
     updateInventoryUnits,
-    discardInventory
+    useBloodUnits,
+    expireBloodInventory
 } = require("../models/bloodInventoryModel");
+
+const {
+    createHistory
+} = require("../models/bloodBankHistoryModel");
 
 
 // ==========================
@@ -65,7 +70,18 @@ const addBloodInventory = async (data) => {
         );
     }
 
-    return await createInventory(data);
+    // Create inventory
+    const inventory = await createInventory(data);
+
+    // Create RECEIVED history
+    await createHistory({
+        inventory_id: inventory.id,
+        transaction_type: "RECEIVED",
+        units: Number(units_collected),
+        notes: "Blood inventory added"
+    });
+
+    return inventory;
 };
 
 
@@ -85,6 +101,9 @@ const getBloodBankInventory = async (
 // ==========================
 // UPDATE AVAILABLE UNITS
 // ==========================
+// Used only when blood bank needs
+// to correct an inventory mistake.
+
 const changeAvailableUnits = async (
     id,
     blood_bank_id,
@@ -103,11 +122,9 @@ const changeAvailableUnits = async (
         );
     }
 
-    // Get existing inventory
     const inventoryList =
         await getInventoryByBloodBank(blood_bank_id);
 
-    // Find the requested inventory
     const inventory = inventoryList.find(
         item => Number(item.id) === Number(id)
     );
@@ -118,7 +135,6 @@ const changeAvailableUnits = async (
         );
     }
 
-    // Check against collected units BEFORE UPDATE
     if (
         Number(units_available) >
         Number(inventory.units_collected)
@@ -128,7 +144,6 @@ const changeAvailableUnits = async (
         );
     }
 
-    // Update database only after validation
     return await updateInventoryUnits(
         id,
         blood_bank_id,
@@ -138,25 +153,79 @@ const changeAvailableUnits = async (
 
 
 // ==========================
-// DISCARD INVENTORY
+// USE BLOOD
 // ==========================
-const discardBloodInventory = async (
+// Called when blood bank actually
+// gives blood to the patient/user.
+
+const useBlood = async (
     id,
-    blood_bank_id
+    blood_bank_id,
+    units_used,
+    reference_id = null
 ) => {
 
-    const inventory = await discardInventory(
+    if (units_used === undefined) {
+        throw new Error(
+            "units_used is required"
+        );
+    }
+
+    if (Number(units_used) <= 0) {
+        throw new Error(
+            "Units used must be greater than 0"
+        );
+    }
+
+    // Update inventory
+    const inventory = await useBloodUnits(
         id,
-        blood_bank_id
+        blood_bank_id,
+        Number(units_used)
     );
 
     if (!inventory) {
         throw new Error(
-            "Inventory record not found"
+            "Insufficient blood units or inventory is unavailable"
         );
     }
 
+    // Create USED history
+    await createHistory({
+        inventory_id: inventory.id,
+        transaction_type: "USED",
+        units: Number(units_used),
+        reference_id: reference_id,
+        notes: "Blood given to patient"
+    });
+
     return inventory;
+};
+
+
+// ==========================
+// EXPIRE BLOOD
+// ==========================
+// Finds expired blood,
+// marks it EXPIRED,
+// and creates EXPIRED history.
+
+const expireBlood = async () => {
+
+    const expiredInventory =
+        await expireBloodInventory();
+
+    for (const inventory of expiredInventory) {
+
+        await createHistory({
+            inventory_id: inventory.id,
+            transaction_type: "EXPIRED",
+            units: Number(inventory.expired_units),
+            notes: "Blood inventory expired"
+        });
+    }
+
+    return expiredInventory;
 };
 
 
@@ -164,5 +233,6 @@ module.exports = {
     addBloodInventory,
     getBloodBankInventory,
     changeAvailableUnits,
-    discardBloodInventory
+    useBlood,
+    expireBlood
 };
