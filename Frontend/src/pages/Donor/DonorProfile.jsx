@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 function DonorProfile() {
   const navigate = useNavigate();
+
   const [editing, setEditing] = useState(false);
 
   const [profile, setProfile] = useState({
@@ -14,12 +15,30 @@ function DonorProfile() {
     location: "Aurangabad, Maharashtra",
     lastDonation: "20 Sep 2026",
     nextDonation: "20 Dec 2026",
-    available: true,
     totalDonations: 5,
     totalRequests: 7,
-    reliabilityScore: 95,
   });
 
+  // Sample reliability data for frontend testing
+  const reliabilityStats = {
+    completedDonations: 5,
+    unsuccessfulAcceptedRequests: 1,
+    requestsAccepted: 2,
+  };
+
+  // Calculate Reliability Score
+  const evaluatedRequests =
+    reliabilityStats.completedDonations +
+    reliabilityStats.unsuccessfulAcceptedRequests;
+
+  const reliabilityScore =
+    evaluatedRequests === 0
+      ? 0
+      : Math.round(
+          (reliabilityStats.completedDonations / evaluatedRequests) * 100
+        );
+
+  // Update profile information
   const handleChange = (e) => {
     setProfile({
       ...profile,
@@ -27,8 +46,14 @@ function DonorProfile() {
     });
   };
 
+  // Save profile changes
+  const handleSave = () => {
+    setEditing(false);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
+      {/* Back Button */}
       <button
         onClick={() => navigate("/Donor/dashboard")}
         className="mb-6 text-sm font-semibold text-red-600 hover:text-red-700"
@@ -36,10 +61,12 @@ function DonorProfile() {
         ← Back to Dashboard
       </button>
 
+      {/* Page Heading */}
       <div className="mb-8">
-        <h1 className="mt-1 text-3xl font-bold text-slate-800">
+        <h1 className="text-3xl font-bold text-slate-800">
           My Profile 👤
         </h1>
+
         <p className="mt-2 text-slate-600">
           View and update your donor information.
         </p>
@@ -130,7 +157,7 @@ function DonorProfile() {
 
             {editing ? (
               <input
-                type="text"
+                type="tel"
                 name="phone"
                 value={profile.phone}
                 onChange={handleChange}
@@ -164,7 +191,7 @@ function DonorProfile() {
             )}
           </div>
 
-          {/* Location - Kept Unchanged */}
+          {/* Location */}
           <div>
             <label className="text-sm font-semibold text-slate-600">
               Location
@@ -188,7 +215,7 @@ function DonorProfile() {
 
         {editing && (
           <button
-            onClick={() => setEditing(false)}
+            onClick={handleSave}
             className="mt-6 rounded-xl bg-green-600 px-6 py-3 font-semibold text-white transition hover:bg-green-700"
           >
             ✓ Save Changes
@@ -207,6 +234,7 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Last Donation
             </p>
+
             <p className="mt-2 font-bold text-slate-800">
               📅 {profile.lastDonation}
             </p>
@@ -216,6 +244,7 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Next Eligible Donation
             </p>
+
             <p className="mt-2 font-bold text-green-700">
               📅 {profile.nextDonation}
             </p>
@@ -225,6 +254,7 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Total Donations
             </p>
+
             <p className="mt-2 text-2xl font-bold text-red-600">
               {profile.totalDonations}
             </p>
@@ -234,6 +264,7 @@ function DonorProfile() {
             <p className="text-sm text-slate-500">
               Total Requests
             </p>
+
             <p className="mt-2 text-2xl font-bold text-blue-600">
               {profile.totalRequests}
             </p>
@@ -241,65 +272,72 @@ function DonorProfile() {
         </div>
       </div>
 
-      {/* Donor Reliability Score */}
+      {/* Reliability Score - Green Design */}
       <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-slate-800">
-          ⭐ Donor Reliability Score
-        </h2>
-
-        <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center">
-          <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-red-50">
-            <span className="text-3xl font-bold text-red-600">
-              {profile.reliabilityScore}%
-            </span>
-            <span className="text-xs text-slate-500">
-              Score
-            </span>
-          </div>
-
+        {/* Heading and Percentage */}
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-2xl tracking-wide">
-              ★★★★★
-            </div>
+            <h2 className="text-xl font-bold text-slate-800">
+              Reliability Score ⭐
+            </h2>
 
-            <h3 className="mt-2 font-bold text-slate-800">
-              Highly Reliable Donor
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Based on completed donations and accepted emergency requests.
+            <p className="mt-2 text-slate-500">
+              Your contribution and response history.
             </p>
           </div>
+
+          <span className="text-3xl font-bold text-green-600">
+            {reliabilityScore}%
+          </span>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">
+        {/* Green Progress Bar */}
+        <div className="mt-6 h-3 w-full overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-full rounded-full bg-green-500 transition-all duration-500"
+            style={{ width: `${reliabilityScore}%` }}
+          />
+        </div>
+
+        {/* Star Rating */}
+        <div className="mt-7 text-2xl tracking-widest text-yellow-500">
+          ★★★★★
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <p className="text-3xl font-bold text-slate-800">
+              {reliabilityStats.completedDonations}
+            </p>
+
+            <p className="mt-1 text-slate-500">
               Donations Completed
             </p>
-            <p className="mt-1 text-xl font-bold text-slate-800">
-              {profile.totalDonations}
-            </p>
           </div>
 
-          <div className="rounded-xl bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">
-              Total Requests
+          <div className="rounded-2xl bg-slate-50 p-5">
+            <p className="text-3xl font-bold text-slate-800">
+              {reliabilityStats.requestsAccepted}
             </p>
-            <p className="mt-1 text-xl font-bold text-slate-800">
-              {profile.totalRequests}
-            </p>
-          </div>
 
-          <div className="rounded-xl bg-slate-50 p-4">
-            <p className="text-sm text-slate-500">
-              Reliability
-            </p>
-            <p className="mt-1 text-xl font-bold text-green-600">
-              {profile.reliabilityScore}%
+            <p className="mt-1 text-slate-500">
+              Requests Accepted
             </p>
           </div>
         </div>
+
+        {/* Score Calculation Box */}
+        <div className="mt-5 rounded-2xl bg-green-50 p-5 text-green-800">
+          <p>
+            <span className="font-bold">
+              Score Calculation:
+            </span>{" "}
+            {reliabilityStats.completedDonations} completed donations out of{" "}
+            {evaluatedRequests} evaluated requests.
+          </p>
+        </div>
+
       </div>
     </div>
   );

@@ -193,7 +193,7 @@ function DonorSettings() {
         </h2>
 
         <p className="mt-2 text-sm text-slate-600">
-          Sign out from your MedReach donor account.
+          Logout out from your MedReach donor account.
         </p>
 
         <button
