@@ -18,8 +18,10 @@ const emergencyBloodResponseRoutes =require("./routes/emergencyBloodResponseRout
 const hospitalEmergencyRequestRoutes = require("./routes/hospitalEmergencyRequestRoutes");
 const hospitalEmergencyResponseRoutes = require("./routes/hospitalEmergencyResponseRoutes");
 const hospitalEmergencyHistoryRoutes = require("./routes/hospitalEmergencyHistoryRoutes");
+const bloodBankEmergencyHistoryRoutes =require("./routes/bloodBankEmergencyHistoryRoutes");
 
 const app = express();
+
 
 app.use(cors());
 app.use(express.json());
@@ -42,6 +44,7 @@ app.use("/api/blood-bank/emergency-blood-responses",emergencyBloodResponseRoutes
 app.use("/api/hospital/emergency-bed-requests",hospitalEmergencyRequestRoutes);
 app.use("/api/hospital/emergency-bed-responses",hospitalEmergencyResponseRoutes);
 app.use( "/api/hospital/emergency-history", hospitalEmergencyHistoryRoutes);
+app.use("/api/blood-bank/emergency-history", bloodBankEmergencyHistoryRoutes);
 
 
 app.get("/", (req, res) => {
