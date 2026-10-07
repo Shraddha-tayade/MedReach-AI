@@ -8,7 +8,8 @@ const authenticateToken = require("./middleware/authMiddleware");
 const resourceRoutes = require("./routes/resourceRoutes");
 const profilesRoutes = require("./routes/profilesRoutes");
 const bloodInventoryRoutes = require("./routes/bloodInventoryRoutes");
-
+const emergencyRequestRoutes = require("./routes/emergencyRequestRoutes");
+const donorRequestRoutes =require("./routes/donorRequestRoutes");
 const app = express();
 
 app.use(cors());
@@ -20,6 +21,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profilesRoutes);
 app.use("/api/blood-bank/inventory", bloodInventoryRoutes);
 app.use("/api/resources", resourceRoutes);
+app.use("/api/emergency-requests", emergencyRequestRoutes);
+app.use("/api/donor",donorRequestRoutes);
+app.use("/api/donor",donorRequestRoutes);
 // app.use("/api/auth", authRoutes);
 // app.use("/api/profile", profilesRoutes);
 // app.use("/api/blood-bank/inventory", bloodInventoryRoutes);

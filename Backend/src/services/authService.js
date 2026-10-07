@@ -63,6 +63,31 @@ const register = async (data, type) => {
             throw new Error("Email already registered");
         }
 
+        const address =
+            `${data.addressLine}, ${data.city}, ${data.state}, ${data.pincode}`;
+
+        // Get coordinates from Geoapify
+        const response = await axios.get(
+            "https://api.geoapify.com/v1/geocode/search",
+            {
+                params: {
+                    text: address,
+                    apiKey: process.env.GEOAPIFY_API_KEY,
+                    limit: 1
+                }
+            }
+        );
+
+        if (!response.data.features.length) {
+            throw new Error("Unable to find blood bank location");
+        }
+
+        const coordinates =
+            response.data.features[0].geometry.coordinates;
+
+        const longitude = coordinates[0];
+        const latitude = coordinates[1];
+
         const password = await bcrypt.hash(data.password, 10);
 
         const donor = await donorModel.createDonor(
@@ -76,7 +101,9 @@ const register = async (data, type) => {
             data.addressLine,
             data.city,
             data.state,
-            data.pincode
+            data.pincode,
+            latitude,
+            longitude
         );
 
         return {
@@ -95,6 +122,31 @@ const register = async (data, type) => {
 
         const password = await bcrypt.hash(data.password, 10);
 
+        const address =
+            `${data.addressLine}, ${data.city}, ${data.state}, ${data.pincode}`;
+
+        // Get coordinates from Geoapify
+        const response = await axios.get(
+            "https://api.geoapify.com/v1/geocode/search",
+            {
+                params: {
+                    text: address,
+                    apiKey: process.env.GEOAPIFY_API_KEY,
+                    limit: 1
+                }
+            }
+        );
+
+        if (!response.data.features.length) {
+            throw new Error("Unable to find blood bank location");
+        }
+
+        const coordinates =
+            response.data.features[0].geometry.coordinates;
+
+        const longitude = coordinates[0];
+        const latitude = coordinates[1];
+
         const hospital = await hospitalModel.createHospital(
             data.username,
             password,
@@ -106,7 +158,9 @@ const register = async (data, type) => {
             data.state,
             data.pincode,
             data.registrationCertificate,
-            data.addressProof
+            data.addressProof,
+            latitude,
+            longitude
         );
 
         return {

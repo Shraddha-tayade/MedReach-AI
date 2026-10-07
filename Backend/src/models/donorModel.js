@@ -11,7 +11,8 @@ const createDonor = async (
     addressLine,
     city,
     state,
-    pincode
+    pincode,
+     latitude, longitude
 ) => {
     const result = await pool.query(
         `INSERT INTO donors
@@ -26,9 +27,12 @@ const createDonor = async (
             address_line,
             city,
             state,
-            pincode
+            pincode,
+            location
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+            ST_SetSRID(ST_MakePoint($13, $12), 4326)::geography
+            )
         RETURNING
             id,
             name,
@@ -41,7 +45,9 @@ const createDonor = async (
             city,
             state,
             pincode,
-            created_at`,
+            created_at,
+            ST_Y(location::geometry) AS latitude,
+            ST_X(location::geometry) AS longitude`,
         [
             name,
             email,
@@ -53,7 +59,9 @@ const createDonor = async (
             addressLine,
             city,
             state,
-            pincode
+            pincode,
+            latitude,
+            longitude
         ]
     );
 
@@ -69,7 +77,33 @@ const findDonorByEmail = async (email) => {
     return result.rows[0];
 };
 
+// FIND DONOR BY ID
+// ===============================
+const findDonorById = async (id) => {
+    const result = await pool.query(
+        `SELECT
+            id,
+            name,
+            email,
+            phone,
+            blood_group,
+            date_of_birth,
+            profile_picture,
+            address_line,
+            city,
+            state,
+            pincode,
+            location,
+            created_at
+         FROM donors
+         WHERE id = $1`,
+        [id]
+    );
+
+    return result.rows[0];
+};
 module.exports = {
     createDonor,
-    findDonorByEmail
+    findDonorByEmail,
+    findDonorById
 };

@@ -1,12 +1,12 @@
-const {
-    updateUserProfile,
-    updateDonorProfile,
-    updateHospitalProfile,
-    updateBloodBankProfile,
-    updateAmbulanceProfile
-} = require("../models/profileModel");
+// const {
+//     updateUserProfile,
+//     updateDonorProfile,
+//     updateHospitalProfile,
+//     updateBloodBankProfile,
+//     updateAmbulanceProfile
+// } = require("../models/profileModel");
 
-
+const profileModel = require("../models/profileModel");
 const updateProfile = async (req, res) => {
     try {
 
@@ -39,7 +39,7 @@ const updateProfile = async (req, res) => {
         // USER
         if (role === "user") {
 
-            profile = await updateUserProfile(
+            profile = await profileModel.updateUserProfile(
                 id,
                 name,
                 email,
@@ -58,7 +58,7 @@ const updateProfile = async (req, res) => {
         // DONOR
         else if (role === "donor") {
 
-            profile = await updateDonorProfile(
+            profile = await profileModel.updateDonorProfile(
                 id,
                 name,
                 email,
@@ -78,7 +78,7 @@ const updateProfile = async (req, res) => {
         // HOSPITAL
         else if (role === "hospital") {
 
-            profile = await updateHospitalProfile(
+            profile = await profileModel.updateHospitalProfile(
                 id,
                 hospital_name,
                 contact,
@@ -94,7 +94,7 @@ const updateProfile = async (req, res) => {
         // BLOOD BANK
         else if (role === "blood_bank") {
 
-            profile = await updateBloodBankProfile(
+            profile = await profileModel.updateBloodBankProfile(
                 id,
                 blood_bank_name,
                 contact,
@@ -110,7 +110,7 @@ const updateProfile = async (req, res) => {
         // AMBULANCE
         else if (role === "ambulance") {
 
-            profile = await updateAmbulanceProfile(
+            profile = await profileModel.updateAmbulanceProfile(
                 id,
                 ambulance_number,
                 ambulance_type,
@@ -172,7 +172,66 @@ const updateProfile = async (req, res) => {
 };
 
 
+const viewProfile = async (req, res) => {
+    try {
+        const { id, type } = req.user;
+
+        let profile;
+
+        switch (type) {
+            case "USER":
+                profile = await profileModel.getUserProfile(id);
+                break;
+
+            case "DONOR":
+                profile = await profileModel.getDonorProfile(id);
+                break;
+
+            case "HOSPITAL":
+                profile = await profileModel.getHospitalProfile(id);
+                break;
+
+            case "BLOOD_BANK":
+                profile = await profileModel.getBloodBankProfile(id);
+                break;
+
+            case "AMBULANCE":
+                profile = await profileModel.getAmbulanceProfile(id);
+                break;
+
+            default:
+                console.error("Invalid type:", type);
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid type"
+                });
+        }
+
+        if (!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            type,
+            profile
+        });
+
+    } catch (error) {
+        console.error("View profile error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch profile"
+        });
+    }
+};
+
 // VERY IMPORTANT
 module.exports = {
-    updateProfile
+    updateProfile,
+    viewProfile
 };
