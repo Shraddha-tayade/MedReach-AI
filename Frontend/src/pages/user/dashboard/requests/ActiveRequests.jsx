@@ -1,30 +1,195 @@
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 function ActiveRequests() {
-  const requests = [
-    {
-      id: "MR-1001",
-      type: "Emergency Medical Request",
-      date: "Today, 10:30 AM",
-      resources: [
-        "Blood: O− (2 Units)",
-        "ICU Bed: 1",
-        "Ambulance",
-      ],
-      priority: "High",
-      status: "Searching",
-    },
-    {
-      id: "MR-1002",
-      type: "Blood Request",
-      date: "Today, 12:15 PM",
-      resources: [
-        "Blood: B+ (1 Unit)",
-      ],
-      priority: "Medium",
-      status: "Pending",
-    },
-  ];
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchActiveRequests = useCallback(async () => {
+    const token = sessionStorage.getItem("medreachToken");
+
+    if (!token) {
+      setError("Please login again to view your active requests.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/emergency-requests/history`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const text = await response.text();
+
+      let data;
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(
+          "Server returned an invalid response. Please check whether the backend API is running."
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "Unable to load active requests."
+        );
+      }
+
+      if (!data?.success) {
+        throw new Error(
+          data?.message || "Unable to load active requests."
+        );
+      }
+
+      const allRequests = Array.isArray(data.requests)
+        ? data.requests
+        : [];
+
+      // No dedicated Active Requests API has been provided.
+      // We use the confirmed history endpoint and filter
+      // completed/cancelled requests on the frontend.
+      const activeRequests = allRequests.filter((request) => {
+        const status = String(
+          request?.status || ""
+        ).toUpperCase();
+
+        return (
+          status !== "COMPLETED" &&
+          status !== "CANCELLED"
+        );
+      });
+
+      setRequests(activeRequests);
+    } catch (err) {
+      setError(
+        err.message ||
+          "Unable to load active requests. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchActiveRequests();
+  }, [fetchActiveRequests]);
+
+  const getStatusStyle = (status) => {
+    const normalizedStatus = String(
+      status || ""
+    ).toUpperCase();
+
+    if (
+      normalizedStatus === "ACTIVE" ||
+      normalizedStatus === "SEARCHING"
+    ) {
+      return "bg-blue-50 text-blue-600";
+    }
+
+    if (
+      normalizedStatus === "PENDING"
+    ) {
+      return "bg-yellow-50 text-yellow-600";
+    }
+
+    return "bg-slate-100 text-slate-600";
+  };
+
+  const getPriorityStyle = (priority) => {
+    const normalizedPriority = String(
+      priority || ""
+    ).toUpperCase();
+
+    if (normalizedPriority === "HIGH") {
+      return "bg-red-50 text-red-600";
+    }
+
+    if (normalizedPriority === "MEDIUM") {
+      return "bg-orange-50 text-orange-600";
+    }
+
+    return "bg-slate-100 text-slate-600";
+  };
+
+  const formatDate = (value) => {
+    if (!value) {
+      return "Date unavailable";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getRequestType = (request) => {
+    if (request?.type) {
+      return request.type;
+    }
+
+    if (request?.requestType) {
+      return request.requestType;
+    }
+
+    return "Emergency Medical Request";
+  };
+
+  const getResources = (request) => {
+    if (Array.isArray(request?.items)) {
+      if (request.items.length === 0) {
+        return ["Medical resources requested"];
+      }
+
+      return request.items.map((item) => {
+        const resourceType =
+          item?.resourceType ||
+          item?.resource_type ||
+          "Medical Resource";
+
+        const quantity =
+          item?.quantity ??
+          item?.units ??
+          item?.unitsRequired;
+
+        if (quantity !== undefined && quantity !== null) {
+          return `${resourceType}: ${quantity}`;
+        }
+
+        return resourceType;
+      });
+    }
+
+    if (typeof request?.resources === "string") {
+      return [request.resources];
+    }
+
+    return ["Resource details unavailable"];
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -34,7 +199,6 @@ function ActiveRequests() {
 
         <div className="max-w-7xl mx-auto flex items-center justify-between">
 
-          {/* Logo */}
           <Link
             to="/user/dashboard"
             className="flex items-center gap-2"
@@ -50,8 +214,6 @@ function ActiveRequests() {
 
           </Link>
 
-
-          {/* Back */}
           <Link
             to="/user/dashboard"
             className="text-sm font-semibold text-slate-600 hover:text-red-600 transition"
@@ -85,7 +247,27 @@ function ActiveRequests() {
         </div>
 
 
-        {/* ================= REQUESTS ================= */}
+        {/* ================= ERROR ================= */}
+        {error && (
+          <div className="mb-8 bg-red-50 border border-red-200 rounded-2xl p-5">
+
+            <p className="text-sm font-semibold text-red-700">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={fetchActiveRequests}
+              className="mt-3 text-sm font-semibold text-red-600 hover:text-red-700"
+            >
+              Try Again →
+            </button>
+
+          </div>
+        )}
+
+
+        {/* ================= REQUEST COUNT ================= */}
         <section>
 
           <div className="flex items-center justify-between mb-5">
@@ -95,126 +277,197 @@ function ActiveRequests() {
             </h3>
 
             <span className="text-sm text-slate-500">
-              {requests.length} active requests
+              {loading
+                ? "Loading..."
+                : `${requests.length} active requests`}
             </span>
 
           </div>
 
 
-          <div className="space-y-5">
+          {/* ================= LOADING ================= */}
+          {loading && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
 
-            {requests.map((request) => (
+              <p className="text-slate-600">
+                Loading your active requests...
+              </p>
 
-              <div
-                key={request.id}
-                className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition"
-              >
+            </div>
+          )}
 
-                {/* ================= TOP ================= */}
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
 
-                  <div>
+          {/* ================= EMPTY ================= */}
+          {!loading &&
+            !error &&
+            requests.length === 0 && (
+              <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center">
 
-                    <div className="flex flex-wrap items-center gap-3">
+                <div className="text-4xl mb-4">
+                  📋
+                </div>
 
-                      <h4 className="text-lg font-bold text-slate-900">
-                        Request #{request.id}
-                      </h4>
+                <h4 className="text-lg font-bold text-slate-900">
+                  No Active Requests
+                </h4>
 
-                      {/* Status */}
+                <p className="text-sm text-slate-500 mt-2">
+                  You currently don't have any active medical resource
+                  requests.
+                </p>
+
+                <Link
+                  to="/user/emergency"
+                  className="inline-flex mt-6 bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 transition"
+                >
+                  + Create Emergency Request
+                </Link>
+
+              </div>
+            )}
+
+
+          {/* ================= REQUESTS ================= */}
+          {!loading && requests.length > 0 && (
+            <div className="space-y-5">
+
+              {requests.map((request, index) => {
+
+                const requestId =
+                  request?.id ??
+                  request?.requestId ??
+                  `Request-${index + 1}`;
+
+                const status =
+                  request?.status || "UNKNOWN";
+
+                const priority =
+                  request?.priority || "Normal";
+
+                const resources =
+                  getResources(request);
+
+                return (
+                  <div
+                    key={requestId}
+                    className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition"
+                  >
+
+                    {/* ================= TOP ================= */}
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+
+                      <div>
+
+                        <div className="flex flex-wrap items-center gap-3">
+
+                          <h4 className="text-lg font-bold text-slate-900">
+                            Request #{requestId}
+                          </h4>
+
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
+                              status
+                            )}`}
+                          >
+                            {status}
+                          </span>
+
+                        </div>
+
+                        <p className="text-sm text-slate-500 mt-1">
+                          {getRequestType(request)} •{" "}
+                          {formatDate(
+                            request?.created_at ??
+                              request?.createdAt ??
+                              request?.created
+                          )}
+                        </p>
+
+                      </div>
+
+
+                      {/* Priority */}
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          request.status === "Searching"
-                            ? "bg-blue-50 text-blue-600"
-                            : "bg-yellow-50 text-yellow-600"
-                        }`}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold w-fit ${getPriorityStyle(
+                          priority
+                        )}`}
                       >
-                        {request.status}
+                        {priority} Priority
                       </span>
 
                     </div>
 
-                    <p className="text-sm text-slate-500 mt-1">
-                      {request.type} • {request.date}
-                    </p>
 
-                  </div>
+                    {/* ================= RESOURCES ================= */}
+                    <div className="mt-6">
+
+                      <p className="text-sm font-semibold text-slate-700 mb-3">
+                        Requested Resources
+                      </p>
+
+                      <div className="flex flex-wrap gap-3">
+
+                        {resources.map(
+                          (resource, resourceIndex) => (
+
+                            <span
+                              key={resourceIndex}
+                              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700"
+                            >
+                              {resource}
+                            </span>
+
+                          )
+                        )}
+
+                      </div>
+
+                    </div>
 
 
-                  {/* Priority */}
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold w-fit ${
-                      request.priority === "High"
-                        ? "bg-red-50 text-red-600"
-                        : "bg-orange-50 text-orange-600"
-                    }`}
-                  >
-                    {request.priority} Priority
-                  </span>
+                    {/* ================= BOTTOM ================= */}
+                    <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
-                </div>
+                      <p className="text-sm text-slate-500">
+                        Request is being processed by available medical
+                        providers.
+                      </p>
 
-
-                {/* ================= RESOURCES ================= */}
-                <div className="mt-6">
-
-                  <p className="text-sm font-semibold text-slate-700 mb-3">
-                    Requested Resources
-                  </p>
-
-                  <div className="flex flex-wrap gap-3">
-
-                    {request.resources.map((resource, index) => (
-
-                      <span
-                        key={index}
-                        className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700"
+                      <Link
+                        to={`/user/request-tracking?requestId=${requestId}`}
+                        className="text-red-600 font-semibold text-sm hover:text-red-700 transition whitespace-nowrap"
                       >
-                        {resource}
-                      </span>
+                        View Tracking →
+                      </Link>
 
-                    ))}
+                    </div>
 
                   </div>
+                );
+              })}
 
-                </div>
-
-
-                {/* ================= BOTTOM ================= */}
-                <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
-                  <p className="text-sm text-slate-500">
-                    Request is being processed by available medical providers.
-                  </p>
-
-
-                  <Link
-                    to="/user/request-tracking"
-                    className="text-red-600 font-semibold text-sm hover:text-red-700 transition whitespace-nowrap"
-                  >
-                    View Tracking →
-                  </Link>
-
-                </div>
-
-              </div>
-
-            ))}
-
-          </div>
+            </div>
+          )}
 
         </section>
 
 
-        {/* ================= CREATE NEW ================= */}
-        <div className="mt-10">
+        {/* ================= ACTIONS ================= */}
+        <div className="mt-10 flex flex-col sm:flex-row gap-4">
 
           <Link
-  to="/user/request-history"
-  className="inline-flex items-center bg-white border border-slate-300 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:border-red-300 hover:text-red-600 transition"
->
-  View Request History
-</Link>
+            to="/user/request-history"
+            className="inline-flex items-center justify-center bg-white border border-slate-300 text-slate-700 px-6 py-3 rounded-xl font-semibold hover:border-red-300 hover:text-red-600 transition"
+          >
+            View Request History
+          </Link>
+
+          <Link
+            to="/user/emergency"
+            className="inline-flex items-center justify-center bg-red-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-red-700 transition"
+          >
+            + Create Emergency Request
+          </Link>
 
         </div>
 

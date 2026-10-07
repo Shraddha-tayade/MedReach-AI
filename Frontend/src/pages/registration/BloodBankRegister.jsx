@@ -19,8 +19,8 @@ function BloodBankRegister() {
     addressProof: null,
   });
 
-  const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -32,11 +32,11 @@ function BloodBankRegister() {
     }));
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
-    setError("");
     setMessage("");
+    setError("");
 
     // Password validation
     if (formData.password !== formData.confirmPassword) {
@@ -44,381 +44,265 @@ function BloodBankRegister() {
       return;
     }
 
-    // Pincode validation
-    if (!/^\d{6}$/.test(formData.pincode)) {
-      setError("Please enter a valid 6-digit pincode.");
-      return;
-    }
-
     // Contact validation
     if (!/^\d{10}$/.test(formData.contact)) {
-      setError("Please enter a valid 10-digit contact number.");
+      setError("Contact number must be 10 digits.");
       return;
     }
 
-    // Frontend-only for now
+    // Pincode validation
+    if (!/^\d{6}$/.test(formData.pincode)) {
+      setError("Pincode must be 6 digits.");
+      return;
+    }
+
+    // Document validation
+    if (!formData.operatingLicence || !formData.addressProof) {
+      setError("Please upload both required documents.");
+      return;
+    }
+
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/register?type=BLOOD_BANK",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-      setMessage(
-        "Blood bank registration form submitted successfully. Backend connection will be added later."
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+            bloodBankName: formData.bloodBankName,
+            licenceNumber: formData.licenceNumber,
+            contact: formData.contact,
+            addressLine: formData.addressLine,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+
+            // Current backend stores these as text paths
+            operatingLicence: `uploads/${formData.operatingLicence.name}`,
+            addressProof: `uploads/${formData.addressProof.name}`,
+          }),
+        }
       );
 
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-    }, 800);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            data.error ||
+            "Blood bank registration failed."
+        );
+      }
+
+      setMessage(
+        data.message ||
+          "Blood bank registration submitted successfully."
+      );
+
+      // Redirect to login after successful registration
+     setTimeout(() => {
+  navigate("/login?role=bloodbank");
+}, 2000);
+
+    }
+     catch (err) {
+      setError(
+        err.message ||
+          "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-4xl">
-
-        {/* Back to Role Selection */}
-        <div className="mb-6">
-          <Link
-            to="/register"
-            className="text-sm text-slate-500 hover:text-red-600 transition"
-          >
-            ← Back to Role Selection
-          </Link>
+    <RegistrationLayout
+      title="Blood Bank Registration"
+      subtitle="Register your blood bank to provide emergency blood resources."
+    >
+      {/* Success Message */}
+      {message && (
+        <div className="mb-5 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
+          {message}
         </div>
+      )}
 
-        {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+      {/* Error Message */}
+      {error && (
+        <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
-          {/* Heading */}
+      <form
+        onSubmit={handleRegister}
+        className="grid md:grid-cols-2 gap-5"
+      >
+        {/* Username */}
+        <Input
+          label="Username"
+          name="username"
+          value={formData.username}
+          onChange={handleChange}
+          placeholder="Enter username"
+        />
+
+        {/* Blood Bank Name */}
+        <Input
+          label="Blood Bank Name"
+          name="bloodBankName"
+          value={formData.bloodBankName}
+          onChange={handleChange}
+          placeholder="Enter blood bank name"
+        />
+
+        {/* Licence Number */}
+        <Input
+          label="Licence Number"
+          name="licenceNumber"
+          value={formData.licenceNumber}
+          onChange={handleChange}
+          placeholder="Enter licence number"
+        />
+
+        {/* Contact */}
+        <Input
+          label="Contact Number"
+          name="contact"
+          type="tel"
+          value={formData.contact}
+          onChange={handleChange}
+          placeholder="Enter 10-digit contact number"
+        />
+
+        {/* Address */}
+        <Input
+          label="Address Line"
+          name="addressLine"
+          value={formData.addressLine}
+          onChange={handleChange}
+          placeholder="House no., Street, Area"
+        />
+
+        {/* City */}
+        <Input
+          label="City"
+          name="city"
+          value={formData.city}
+          onChange={handleChange}
+          placeholder="Enter city"
+        />
+
+        {/* State */}
+        <Input
+          label="State"
+          name="state"
+          value={formData.state}
+          onChange={handleChange}
+          placeholder="Enter state"
+        />
+
+        {/* Pincode */}
+        <Input
+          label="Pincode"
+          name="pincode"
+          value={formData.pincode}
+          onChange={handleChange}
+          placeholder="Enter 6-digit pincode"
+        />
+
+        {/* Password */}
+        <Input
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Create password"
+        />
+
+        {/* Confirm Password */}
+        <Input
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Confirm password"
+        />
+
+        {/* Operating Licence */}
+        <FileInput
+          label="Operating Licence"
+          name="operatingLicence"
+          onChange={handleChange}
+        />
+
+        {/* Address Proof */}
+        <FileInput
+          label="Address Proof"
+          name="addressProof"
+          onChange={handleChange}
+        />
+
+        {/* Submit */}
+        <div className="md:col-span-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition disabled:bg-red-300"
+          >
+            {loading
+              ? "Submitting Registration..."
+              : "Register Blood Bank"}
+          </button>
+        </div>
+      </form>
+    </RegistrationLayout>
+  );
+}
+
+
+// ================= REGISTRATION LAYOUT =================
+
+function RegistrationLayout({ title, subtitle, children }) {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-2xl">
+
+        <Link
+          to="/register"
+          className="text-sm text-red-600 hover:text-red-700"
+        >
+          ← Change Registration Type
+        </Link>
+
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mt-4">
+
           <div className="text-center mb-8">
-
-            <div className="flex justify-center items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                M
-              </div>
-
-              <h1 className="text-3xl font-bold text-slate-900">
-                Med<span className="text-red-600">Reach</span>
-              </h1>
-            </div>
-
-            <h2 className="text-2xl font-bold text-slate-900">
-              Blood Bank Registration
-            </h2>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
+              {title}
+            </h1>
 
             <p className="text-slate-500 mt-2">
-              Register your blood bank to help coordinate emergency blood
-              requirements through MedReach.
+              {subtitle}
             </p>
-
           </div>
 
-          {/* Success Message */}
-          {message && (
-            <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
-              {message}
-            </div>
-          )}
+          {children}
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleRegister} className="space-y-8">
-
-            {/* ================= ACCOUNT DETAILS ================= */}
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                Account Details
-              </h3>
-
-              <div className="grid md:grid-cols-2 gap-5">
-
-                {/* Username */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Username
-                  </label>
-
-                  <input
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    placeholder="Enter username"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Password
-                  </label>
-
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Create password"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* Confirm Password */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Confirm Password
-                  </label>
-
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="Confirm password"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-              </div>
-            </div>
-
-            {/* ================= BLOOD BANK DETAILS ================= */}
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                Blood Bank Details
-              </h3>
-
-              <div className="grid md:grid-cols-2 gap-5">
-
-                {/* Blood Bank Name */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Blood Bank Name
-                  </label>
-
-                  <input
-                    type="text"
-                    name="bloodBankName"
-                    value={formData.bloodBankName}
-                    onChange={handleChange}
-                    placeholder="Enter blood bank name"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* Licence Number */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Licence Number
-                  </label>
-
-                  <input
-                    type="text"
-                    name="licenceNumber"
-                    value={formData.licenceNumber}
-                    onChange={handleChange}
-                    placeholder="Enter licence number"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* Contact */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Contact Number
-                  </label>
-
-                  <input
-                    type="tel"
-                    name="contact"
-                    value={formData.contact}
-                    onChange={handleChange}
-                    placeholder="Enter 10-digit contact number"
-                    maxLength="10"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-              </div>
-            </div>
-
-            {/* ================= ADDRESS DETAILS ================= */}
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">
-                Address Details
-              </h3>
-
-              <div className="grid md:grid-cols-2 gap-5">
-
-                {/* Address Line */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Address Line
-                  </label>
-
-                  <input
-                    type="text"
-                    name="addressLine"
-                    value={formData.addressLine}
-                    onChange={handleChange}
-                    placeholder="Enter complete blood bank address"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* City */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    City
-                  </label>
-
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="Enter city"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* State */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    State
-                  </label>
-
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    placeholder="Enter state"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-                {/* Pincode */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Pincode
-                  </label>
-
-                  <input
-                    type="text"
-                    name="pincode"
-                    value={formData.pincode}
-                    onChange={handleChange}
-                    placeholder="Enter 6-digit pincode"
-                    maxLength="6"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
-                  />
-                </div>
-
-              </div>
-            </div>
-
-            {/* ================= VERIFICATION DOCUMENTS ================= */}
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                Verification Documents
-              </h3>
-
-              <p className="text-sm text-slate-500 mb-4">
-                Upload the required documents for blood bank verification.
-              </p>
-
-              <div className="grid md:grid-cols-2 gap-5">
-
-                {/* Operating Licence */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Operating Licence
-                  </label>
-
-                  <input
-                    type="file"
-                    name="operatingLicence"
-                    onChange={handleChange}
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-sm"
-                  />
-
-                  <p className="text-xs text-slate-400 mt-2">
-                    Upload the valid licence or authorization permitting the
-                    blood bank to operate, issued by the relevant authority.
-                    Accepted formats: PDF, JPG, JPEG, PNG.
-                  </p>
-                </div>
-
-                {/* Address Proof */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Address Proof
-                  </label>
-
-                  <input
-                    type="file"
-                    name="addressProof"
-                    onChange={handleChange}
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-sm"
-                  />
-
-                  <p className="text-xs text-slate-400 mt-2">
-                    Upload a valid document confirming the blood bank's
-                    registered address, such as a government-issued address
-                    document or utility bill. Accepted formats: PDF, JPG,
-                    JPEG, PNG.
-                  </p>
-                </div>
-
-              </div>
-            </div>
-
-            {/* ================= SUBMIT ================= */}
-            <div className="pt-2">
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition disabled:bg-red-300 disabled:cursor-not-allowed"
-              >
-                {loading
-                  ? "Creating Blood Bank Account..."
-                  : "Create Blood Bank Account"}
-              </button>
-
-            </div>
-
-          </form>
-
-          {/* Login */}
           <p className="text-center text-sm text-slate-600 mt-6">
             Already have an account?{" "}
-
             <Link
               to="/login"
-              className="text-red-600 font-semibold hover:text-red-700"
+              className="text-red-600 font-semibold"
             >
               Login
             </Link>
@@ -429,5 +313,57 @@ function BloodBankRegister() {
     </div>
   );
 }
+
+
+// ================= INPUT COMPONENT =================
+
+function Input({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-2">
+        {label}
+      </label>
+
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required
+        className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
+      />
+    </div>
+  );
+}
+
+
+// ================= FILE INPUT COMPONENT =================
+
+function FileInput({ label, name, onChange }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-2">
+        {label}
+      </label>
+
+      <input
+        type="file"
+        name={name}
+        onChange={onChange}
+        required
+        className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-white"
+      />
+    </div>
+  );
+}
+
 
 export default BloodBankRegister;

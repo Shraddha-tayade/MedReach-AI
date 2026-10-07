@@ -34,7 +34,7 @@ function AmbulanceRegister() {
     }));
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     setError("");
@@ -58,7 +58,7 @@ function AmbulanceRegister() {
       return;
     }
 
-    // Private ambulance must have an associated hospital
+    // Private ambulance must have associated hospital
     if (
       formData.ambulanceCategory === "PRIVATE" &&
       !formData.hospitalId.trim()
@@ -67,20 +67,70 @@ function AmbulanceRegister() {
       return;
     }
 
-    // Frontend-only for now
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/register?type=AMBULANCE",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+            ambulanceNumber: formData.ambulanceNumber,
+            ambulanceType: formData.ambulanceType,
+            ambulanceCategory: formData.ambulanceCategory,
+            hospitalId:
+              formData.hospitalId.trim() !== ""
+                ? formData.hospitalId.trim()
+                : null,
+            contact: formData.contact,
+            addressLine: formData.addressLine,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+
+            // Backend currently expects text fields,
+            // so send file names instead of actual multipart files.
+            rcDocument: formData.rcDocument
+              ? `uploads/${formData.rcDocument.name}`
+              : "",
+            fitnessCertificate: formData.fitnessCertificate
+              ? `uploads/${formData.fitnessCertificate.name}`
+              : "",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            data.error ||
+            "Ambulance registration failed."
+        );
+      }
 
       setMessage(
-        "Ambulance registration form submitted successfully. Backend connection will be added later."
+        data.message ||
+          "Ambulance registration submitted successfully."
       );
 
       setTimeout(() => {
-        navigate("/login");
+        navigate("/login?role=ambulance");
       }, 2000);
-    }, 800);
+    } catch (err) {
+      setError(
+        err.message ||
+          "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -282,7 +332,7 @@ function AmbulanceRegister() {
                   </select>
                 </div>
 
-                {/* Associated Hospital - Only for Private */}
+                {/* Associated Hospital */}
                 {formData.ambulanceCategory === "PRIVATE" && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -294,7 +344,7 @@ function AmbulanceRegister() {
                       name="hospitalId"
                       value={formData.hospitalId}
                       onChange={handleChange}
-                      placeholder="Enter associated hospital"
+                      placeholder="Enter hospital ID"
                       required
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
                     />
@@ -485,7 +535,7 @@ function AmbulanceRegister() {
             Already have an account?{" "}
 
             <Link
-              to="/login"
+              to="/login?role=ambulance"
               className="text-red-600 font-semibold hover:text-red-700"
             >
               Login

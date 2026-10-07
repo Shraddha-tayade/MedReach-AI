@@ -1,22 +1,26 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function DonorRegister() {
-  const [formData, setFormData] = useState({
-  name: "",
-  phone: "",
-  email: "",
-  dateOfBirth: "",
-  bloodGroup: "",
-  addressLine: "",
-  city: "",
-  state: "",
-  pincode: "",
-  password: "",
-  confirmPassword: "",
-});
+  const navigate = useNavigate();
 
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    dateOfBirth: "",
+    bloodGroup: "",
+    addressLine: "",
+    city: "",
+    state: "",
+    pincode: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,17 +31,83 @@ function DonorRegister() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    setMessage("");
     setError("");
 
+    // Password validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
-    // Backend donor registration will be connected later.
-    alert("Donor registration form completed. Backend integration pending.");
+    // Phone validation
+    if (!/^\d{10}$/.test(formData.phone)) {
+      setError("Phone number must be 10 digits.");
+      return;
+    }
+
+    // Pincode validation
+    if (!/^\d{6}$/.test(formData.pincode)) {
+      setError("Pincode must be 6 digits.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/register?type=DONOR",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            password: formData.password,
+            bloodGroup: formData.bloodGroup,
+            dateOfBirth: formData.dateOfBirth,
+            addressLine: formData.addressLine,
+            city: formData.city,
+            state: formData.state,
+            pincode: formData.pincode,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            data.error ||
+            "Donor registration failed."
+        );
+      }
+
+      setMessage(
+        data.message ||
+          "Donor registration successful."
+      );
+
+      // Redirect to Login with Donor already selected
+      setTimeout(() => {
+        navigate("/login?role=donor");
+      }, 1500);
+
+    } catch (err) {
+      setError(
+        err.message ||
+          "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,116 +115,146 @@ function DonorRegister() {
       title="Blood Donor Registration"
       subtitle="Register as a donor and help patients during emergencies."
     >
+      {/* Success Message */}
+      {message && (
+        <div className="mb-5 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">
+          {message}
+        </div>
+      )}
+
+      {/* Error Message */}
       {error && <ErrorMessage message={error} />}
 
       <form
         onSubmit={handleSubmit}
         className="grid md:grid-cols-2 gap-5"
       >
-       
-       <Input
-  label="Full Name"
-  name="name"
-  value={formData.name}
-  onChange={handleChange}
-  placeholder="Enter your full name"
-/>
 
-<Input
-  label="Phone Number"
-  name="phone"
-  type="tel"
-  value={formData.phone}
-  onChange={handleChange}
-  placeholder="Enter phone number"
-/>
+        {/* Full Name */}
+        <Input
+          label="Full Name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder="Enter your full name"
+        />
 
-<Input
-  label="Email Address"
-  name="email"
-  type="email"
-  value={formData.email}
-  onChange={handleChange}
-  placeholder="Enter your email"
-/>
+        {/* Phone */}
+        <Input
+          label="Phone Number"
+          name="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={handleChange}
+          placeholder="Enter 10-digit phone number"
+        />
 
-<Input
-  label="Date of Birth"
-  name="dateOfBirth"
-  type="date"
-  value={formData.dateOfBirth}
-  onChange={handleChange}
-/>
+        {/* Email */}
+        <Input
+          label="Email Address"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Enter your email"
+        />
 
-<Select
-  label="Blood Group"
-  name="bloodGroup"
-  value={formData.bloodGroup}
-  onChange={handleChange}
-  options={[
-    "A+",
-    "A-",
-    "B+",
-    "B-",
-    "AB+",
-    "AB-",
-    "O+",
-    "O-",
-  ]}
-/>
+        {/* Date of Birth */}
+        <Input
+          label="Date of Birth"
+          name="dateOfBirth"
+          type="date"
+          value={formData.dateOfBirth}
+          onChange={handleChange}
+        />
 
-<Input
-  label="Address Line"
-  name="addressLine"
-  value={formData.addressLine}
-  onChange={handleChange}
-  placeholder="House no., Street, Area"
-/>
+        {/* Blood Group */}
+        <Select
+          label="Blood Group"
+          name="bloodGroup"
+          value={formData.bloodGroup}
+          onChange={handleChange}
+          options={[
+            "A+",
+            "A-",
+            "B+",
+            "B-",
+            "AB+",
+            "AB-",
+            "O+",
+            "O-",
+          ]}
+        />
 
-<Input
-  label="City"
-  name="city"
-  value={formData.city}
-  onChange={handleChange}
-  placeholder="Enter your city"
-/>
+        {/* Address */}
+        <Input
+          label="Address Line"
+          name="addressLine"
+          value={formData.addressLine}
+          onChange={handleChange}
+          placeholder="House no., Street, Area"
+        />
 
-<Input
-  label="State"
-  name="state"
-  value={formData.state}
-  onChange={handleChange}
-  placeholder="Enter your state"
-/>
+        {/* City */}
+        <Input
+          label="City"
+          name="city"
+          value={formData.city}
+          onChange={handleChange}
+          placeholder="Enter your city"
+        />
 
-<Input
-  label="Pincode"
-  name="pincode"
-  value={formData.pincode}
-  onChange={handleChange}
-  placeholder="Enter pincode"
-/>
+        {/* State */}
+        <Input
+          label="State"
+          name="state"
+          value={formData.state}
+          onChange={handleChange}
+          placeholder="Enter your state"
+        />
 
-<Input
-  label="Password"
-  name="password"
-  type="password"
-  value={formData.password}
-  onChange={handleChange}
-  placeholder="Create password"
-/>
+        {/* Pincode */}
+        <Input
+          label="Pincode"
+          name="pincode"
+          value={formData.pincode}
+          onChange={handleChange}
+          placeholder="Enter 6-digit pincode"
+        />
 
-<Input
-  label="Confirm Password"
-  name="confirmPassword"
-  type="password"
-  value={formData.confirmPassword}
-  onChange={handleChange}
-  placeholder="Confirm password"
-/>
+        {/* Password */}
+        <Input
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Create password"
+        />
 
-       
-        <SubmitButton text="Create Donor Account" />
+        {/* Confirm Password */}
+        <Input
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Confirm password"
+        />
+
+        {/* Submit */}
+        <div className="md:col-span-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition disabled:bg-red-300 disabled:cursor-not-allowed"
+          >
+            {loading
+              ? "Creating Account..."
+              : "Create Donor Account"}
+          </button>
+        </div>
+
       </form>
     </RegistrationLayout>
   );
@@ -162,35 +262,58 @@ function DonorRegister() {
 
 export default DonorRegister;
 
-function RegistrationLayout({ title, subtitle, children }) {
+
+// ================= REGISTRATION LAYOUT =================
+
+function RegistrationLayout({
+  title,
+  subtitle,
+  children,
+}) {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-2xl">
-        <Link to="/register" className="text-sm text-red-600">
+
+        <Link
+          to="/register"
+          className="text-sm text-red-600 hover:text-red-700"
+        >
           ← Change Registration Type
         </Link>
 
         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mt-4">
+
           <div className="text-center mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
               {title}
             </h1>
-            <p className="text-slate-500 mt-2">{subtitle}</p>
+
+            <p className="text-slate-500 mt-2">
+              {subtitle}
+            </p>
           </div>
 
           {children}
 
           <p className="text-center text-sm text-slate-600 mt-6">
             Already have an account?{" "}
-            <Link to="/login" className="text-red-600 font-semibold">
+
+            <Link
+              to="/login"
+              className="text-red-600 font-semibold hover:text-red-700"
+            >
               Login
             </Link>
           </p>
+
         </div>
       </div>
     </div>
   );
 }
+
+
+// ================= INPUT =================
 
 function Input({
   label,
@@ -205,6 +328,7 @@ function Input({
       <label className="block text-sm font-medium text-slate-700 mb-2">
         {label}
       </label>
+
       <input
         type={type}
         name={name}
@@ -218,12 +342,22 @@ function Input({
   );
 }
 
-function Select({ label, name, value, onChange, options }) {
+
+// ================= SELECT =================
+
+function Select({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+}) {
   return (
     <div>
       <label className="block text-sm font-medium text-slate-700 mb-2">
         {label}
       </label>
+
       <select
         name={name}
         value={value}
@@ -231,9 +365,15 @@ function Select({ label, name, value, onChange, options }) {
         required
         className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500"
       >
-        <option value="">Select {label}</option>
+        <option value="">
+          Select {label}
+        </option>
+
         {options.map((option) => (
-          <option key={option} value={option}>
+          <option
+            key={option}
+            value={option}
+          >
             {option}
           </option>
         ))}
@@ -242,18 +382,8 @@ function Select({ label, name, value, onChange, options }) {
   );
 }
 
-function SubmitButton({ text }) {
-  return (
-    <div className="md:col-span-2">
-      <button
-        type="submit"
-        className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition"
-      >
-        {text}
-      </button>
-    </div>
-  );
-}
+
+// ================= ERROR MESSAGE =================
 
 function ErrorMessage({ message }) {
   return (

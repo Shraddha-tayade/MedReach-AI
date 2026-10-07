@@ -286,6 +286,136 @@ const updateAmbulanceProfile = async (
 };
 
 
+const getUserProfile = async (id) => {
+    const result = await pool.query(
+        `
+        SELECT
+            id,
+            name,
+            email,
+            phone,
+            date_of_birth,
+            profile_picture,
+            address_line,
+            city,
+            state,
+            pincode,
+            created_at
+        FROM users
+        WHERE id = $1
+        `,
+        [id]
+    );
+
+    return result.rows[0];
+};
+
+const getDonorProfile = async (id) => {
+    const result = await pool.query(
+        `
+        SELECT
+            id,
+            name,
+            email,
+            phone,
+            blood_group,
+            date_of_birth,
+            profile_picture,
+            address_line,
+            city,
+            state,
+            pincode,
+            created_at,
+            location
+        FROM donors
+        WHERE id = $1
+        `,
+        [id]
+    );
+
+    return result.rows[0];
+};
+
+const getHospitalProfile = async (id) => {
+    const result = await pool.query(
+        `
+        SELECT
+            id,
+            username,
+            hospital_name,
+            registration_number,
+            contact,
+            address_line,
+            city,
+            state,
+            pincode,
+            registration_certificate,
+            address_proof,
+            verification_status,
+            created_at,
+            location
+        FROM hospitals
+        WHERE id = $1
+        `,
+        [id]
+    );
+
+    return result.rows[0];
+};
+
+const getBloodBankProfile = async (id) => {
+    const result = await pool.query(
+        `
+        SELECT
+            id,
+            username,
+            blood_bank_name,
+            registration_number,
+            contact,
+            address_line,
+            city,
+            state,
+            pincode,
+            registration_certificate,
+            address_proof,
+            verification_status,
+            created_at,
+            location
+        FROM blood_banks
+        WHERE id = $1
+        `,
+        [id]
+    );
+
+    return result.rows[0];
+};
+
+const getAmbulanceProfile = async (id) => {
+    const result = await pool.query(
+        `
+        SELECT
+            id,
+            username,
+            ambulance_name,
+            contact,
+            ambulance_type,
+            ownership_type,
+            address_line,
+            city,
+            state,
+            pincode,
+            verification_status,
+            created_at,
+            location
+        FROM ambulances
+        WHERE id = $1
+        `,
+        [id]
+    );
+
+    return result.rows[0];
+};
+
 // ==========================
 // EXPORT FUNCTIONS
 // ==========================
@@ -294,5 +424,10 @@ module.exports = {
     updateDonorProfile,
     updateHospitalProfile,
     updateBloodBankProfile,
-    updateAmbulanceProfile
+    updateAmbulanceProfile,
+    getUserProfile,
+    getDonorProfile,
+    getHospitalProfile,
+    getBloodBankProfile,
+    getAmbulanceProfile
 };
