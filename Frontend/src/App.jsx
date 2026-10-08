@@ -14,6 +14,10 @@ import DonorProfile from "./pages/Donor/DonorProfile";
 import DonorNotifications from "./pages/Donor/DonorNotifications";
 import DonorSettings from "./pages/Donor/DonorSettings";
 
+import AmbulanceDashboard from "./pages/Ambulance/AmbulanceDashboard";
+import MyAmbulance from "./pages/Ambulance/MyAmbulance";
+import EmergencyRequests from "./pages/Ambulance/EmergencyRequests";
+import AmbulanceProfile from "./pages/Ambulance/AmbulanceProfile";
 
 import HospitalDashboard from "./pages/Hospital/HospitalDashboard";
 import HospitalEmergencyRequests from "./pages/Hospital/EmergencyRequests";
@@ -55,8 +59,6 @@ import Profile from "./pages/user/dashboard/profile/Profile";
 
 import Notifications from "./pages/user/dashboard/notifications/Notifications";
 
-import AdminDashboard from "./pages/Admin/AdminDashboard";
-
 function App() {
   return (
     <BrowserRouter>
@@ -73,6 +75,10 @@ function App() {
         <Route path="/Donor/notifications" element={<DonorNotifications />} />
         <Route path="/Donor/settings" element={<DonorSettings />} />
 
+        <Route path="/Ambulance/dashboard" element={<AmbulanceDashboard />} />
+        <Route path="/Ambulance/my-ambulance" element={<MyAmbulance />} />
+        <Route path="/Ambulance/requests"  element={<EmergencyRequests />} />
+        <Route path="/Ambulance/profile" element={<AmbulanceProfile />} />
 
         <Route path="/Hospital/dashboard" element={<HospitalDashboard />} />
         <Route path="/Hospital/emergency-requests" element={<HospitalEmergencyRequests />}/>
@@ -81,7 +87,7 @@ function App() {
         <Route path="/Hospital/blood-requests/:requestId" element={<BloodRequestDetails />} />
         <Route path="/Hospital/blood-request-history"  element={<BloodRequestHistory />} />
         <Route path="/Hospital/emergency-history" element={<EmergencyHistory />} />
-        <Route path="/Hospital/profile" element={<HospitalProfile />} />
+        <Route path="/Hospital/profile" element={<HospitalProfile />}/>
 
         <Route
           path="/register/patient"
@@ -130,7 +136,6 @@ function App() {
         <Route path="/user/profile" element={<Profile />} />
 
         <Route path="/user/notifications"element={<Notifications />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />}/>
 
       </Routes>
     </BrowserRouter>
