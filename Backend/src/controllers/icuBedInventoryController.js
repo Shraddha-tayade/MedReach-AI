@@ -21,16 +21,20 @@ const createICUInventory = async (req, res) => {
         const hospital_id = req.user.id;
 
         const {
-            total_beds,
-            available_beds
-        } = req.body;
+    total_beds,
+    available_beds,
+    reserved_beds,
+    occupied_beds
+} = req.body;
 
-        const inventory =
-            await addICUInventory({
-                hospital_id,
-                total_beds,
-                available_beds
-            });
+       const inventory =
+    await addICUInventory({
+        hospital_id,
+        total_beds,
+        available_beds,
+        reserved_beds,
+        occupied_beds
+    });
 
         return res.status(201).json({
             message:

@@ -8,7 +8,9 @@ const {
 const addICUInventory = async ({
     hospital_id,
     total_beds,
-    available_beds
+    available_beds,
+    reserved_beds,
+    occupied_beds
 }) => {
 
     if (!hospital_id) {
@@ -16,13 +18,15 @@ const addICUInventory = async ({
     }
 
     if (
-        total_beds === undefined ||
-        available_beds === undefined
-    ) {
-        throw new Error(
-            "Total beds and available beds are required"
-        );
-    }
+    total_beds === undefined ||
+    available_beds === undefined ||
+    reserved_beds === undefined ||
+    occupied_beds === undefined
+) {
+    throw new Error(
+        "All bed counts are required"
+    );
+}
 
     if (total_beds < 0 || available_beds < 0) {
         throw new Error(
@@ -36,11 +40,24 @@ const addICUInventory = async ({
         );
     }
 
-    return await createICUInventory({
-        hospital_id,
-        total_beds,
-        available_beds
-    });
+    if (
+    total_beds !==
+    available_beds +
+    reserved_beds +
+    occupied_beds
+) {
+    throw new Error(
+        "Total beds must equal available + reserved + occupied"
+    );
+}
+
+   return await createICUInventory({
+    hospital_id,
+    total_beds,
+    available_beds,
+    reserved_beds,
+    occupied_beds
+});
 };
 
 

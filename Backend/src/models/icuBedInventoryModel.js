@@ -4,7 +4,9 @@ const pool = require("../config/db");
 const createICUInventory = async ({
     hospital_id,
     total_beds,
-    available_beds
+    available_beds,
+    reserved_beds,
+    occupied_beds
 }) => {
     const status =
         available_beds > 0 ? "AVAILABLE" : "UNAVAILABLE";
@@ -18,16 +20,18 @@ const createICUInventory = async ({
             occupied_beds,
             status
         )
-        VALUES ($1, $2, $3, 0, 0, $4)
+       VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *;
     `;
 
     const result = await pool.query(query, [
-        hospital_id,
-        total_beds,
-        available_beds,
-        status
-    ]);
+    hospital_id,
+    total_beds,
+    available_beds,
+    reserved_beds,
+    occupied_beds,
+    status
+]);
 
     return result.rows[0];
 };

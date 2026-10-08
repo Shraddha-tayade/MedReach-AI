@@ -117,12 +117,13 @@ function Login() {
         navigate("/user/dashboard");
       } else if (role === "donor") {
         navigate("/Donor/dashboard");
+      } else if (role === "hospital") {
+        navigate("/Hospital/dashboard");
       } else {
         setError(
           "Login successful, but this role's dashboard is not connected yet."
         );
       }
-
     } catch (err) {
       setError(
         err.message ||

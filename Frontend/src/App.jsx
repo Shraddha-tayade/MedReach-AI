@@ -14,6 +14,16 @@ import DonorProfile from "./pages/Donor/DonorProfile";
 import DonorNotifications from "./pages/Donor/DonorNotifications";
 import DonorSettings from "./pages/Donor/DonorSettings";
 
+
+import HospitalDashboard from "./pages/Hospital/HospitalDashboard";
+import HospitalEmergencyRequests from "./pages/Hospital/EmergencyRequests";
+import BedManagement from "./pages/Hospital/BedManagement";
+import BloodRequests from "./pages/Hospital/BloodRequests";
+import BloodRequestDetails from "./pages/Hospital/BloodRequestDetails";
+import BloodRequestHistory from "./pages/Hospital/BloodRequestHistory";
+import EmergencyHistory from "./pages/Hospital/EmergencyHistory";
+import HospitalProfile from "./pages/Hospital/HospitalProfile";
+
 import PatientRegister from "./pages/registration/PatientRegister";
 import DonorRegister from "./pages/registration/DonorRegister";
 import HospitalRegister from "./pages/registration/HospitalRegister";
@@ -62,6 +72,16 @@ function App() {
         <Route path="/Donor/profile" element={<DonorProfile />} />
         <Route path="/Donor/notifications" element={<DonorNotifications />} />
         <Route path="/Donor/settings" element={<DonorSettings />} />
+
+
+        <Route path="/Hospital/dashboard" element={<HospitalDashboard />} />
+        <Route path="/Hospital/emergency-requests" element={<HospitalEmergencyRequests />}/>
+        <Route path="/Hospital/bed-management" element={<BedManagement />} />
+        <Route path="/Hospital/blood-requests" element={<BloodRequests />} />
+        <Route path="/Hospital/blood-requests/:requestId" element={<BloodRequestDetails />} />
+        <Route path="/Hospital/blood-request-history"  element={<BloodRequestHistory />} />
+        <Route path="/Hospital/emergency-history" element={<EmergencyHistory />} />
+        <Route path="/Hospital/profile" element={<HospitalProfile />} />
 
         <Route
           path="/register/patient"
