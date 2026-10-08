@@ -1,7 +1,10 @@
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function UserDashboard() {
-  // Get logged-in user details saved during login
+  const navigate = useNavigate();
+
+  // Get logged-in user details
   const storedUser = sessionStorage.getItem("medreachUser");
 
   let user = null;
@@ -14,6 +17,39 @@ function UserDashboard() {
 
   const userName = user?.name || "Patient";
   const userInitial = userName.charAt(0).toUpperCase();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+    };
+  }, []);
+
+  // ================= LOGOUT =================
+  const handleLogout = () => {
+    sessionStorage.removeItem("medreachToken");
+    sessionStorage.removeItem("medreachUser");
+    sessionStorage.removeItem("medreachLastEmergencyRequest");
+
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -37,8 +73,11 @@ function UserDashboard() {
           </div>
 
 
-          {/* User */}
-          <div className="flex items-center gap-4">
+          {/* ================= USER MENU ================= */}
+          <div
+            ref={menuRef}
+            className="relative flex items-center gap-4"
+          >
 
             <div className="text-right hidden sm:block">
 
@@ -52,9 +91,63 @@ function UserDashboard() {
 
             </div>
 
-            <div className="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-semibold">
+
+            {/* Avatar Button */}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="w-10 h-10 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-semibold hover:bg-red-200 transition focus:outline-none"
+              aria-label="Open profile menu"
+            >
               {userInitial}
-            </div>
+            </button>
+
+
+            {/* Dropdown */}
+            {menuOpen && (
+              <div className="absolute right-0 top-14 w-52 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden z-50">
+
+                {/* User info */}
+                <div className="px-4 py-3 border-b border-slate-100">
+
+                  <p className="font-semibold text-slate-900 truncate">
+                    {userName}
+                  </p>
+
+                  <p className="text-xs text-slate-500">
+                    Patient / Family
+                  </p>
+
+                </div>
+
+
+                {/* Edit Profile */}
+                <Link
+                  to="/user/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-red-50 hover:text-red-600 transition"
+                >
+                  <span>👤</span>
+                  <span className="font-medium">
+                    Edit Profile
+                  </span>
+                </Link>
+
+
+                {/* Logout */}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-700 hover:bg-red-50 hover:text-red-600 transition text-left border-t border-slate-100"
+                >
+                  <span>🚪</span>
+                  <span className="font-medium">
+                    Logout
+                  </span>
+                </button>
+
+              </div>
+            )}
 
           </div>
 

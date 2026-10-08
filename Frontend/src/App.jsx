@@ -45,6 +45,8 @@ import Profile from "./pages/user/dashboard/profile/Profile";
 
 import Notifications from "./pages/user/dashboard/notifications/Notifications";
 
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+
 function App() {
   return (
     <BrowserRouter>
@@ -108,6 +110,7 @@ function App() {
         <Route path="/user/profile" element={<Profile />} />
 
         <Route path="/user/notifications"element={<Notifications />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />}/>
 
       </Routes>
     </BrowserRouter>

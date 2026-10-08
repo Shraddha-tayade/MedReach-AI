@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function EmergencyRequest() {
-  // ================= RESOURCES =================
+  // =========================================================
+  // RESOURCES
+  // =========================================================
 
   const [resources, setResources] = useState({
     blood: false,
@@ -11,12 +13,16 @@ function EmergencyRequest() {
     ambulance: false,
   });
 
-  // ================= BASIC INFORMATION =================
+  // =========================================================
+  // BASIC INFORMATION
+  // =========================================================
 
   const [emergencyType, setEmergencyType] = useState("");
   const [priority, setPriority] = useState("");
 
-  // ================= LOCATION =================
+  // =========================================================
+  // LOCATION
+  // =========================================================
 
   const [manualLocation, setManualLocation] = useState("");
   const [requestAddress, setRequestAddress] = useState("");
@@ -33,7 +39,9 @@ function EmergencyRequest() {
     longitude: null,
   });
 
-  // ================= RESOURCE DETAILS =================
+  // =========================================================
+  // RESOURCE DETAILS
+  // =========================================================
 
   const [bloodGroup, setBloodGroup] = useState("A+");
   const [bloodUnits, setBloodUnits] = useState("");
@@ -46,20 +54,26 @@ function EmergencyRequest() {
   const [ambulanceDestination, setAmbulanceDestination] =
     useState("");
 
-  // ================= ADDITIONAL INFORMATION =================
+  // =========================================================
+  // ADDITIONAL INFORMATION
+  // =========================================================
 
   const [additionalInfo, setAdditionalInfo] = useState("");
 
-  // ================= API / SUBMISSION =================
+  // =========================================================
+  // SUBMISSION
+  // =========================================================
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const [requestId, setRequestId] = useState(null);
+  const [createdItems, setCreatedItems] = useState([]);
   const [submitError, setSubmitError] = useState("");
-  const [providerDispatchStatus, setProviderDispatchStatus] = useState("");
 
-  // ================= RESOURCE TOGGLE =================
+  // =========================================================
+  // RESOURCE TOGGLE
+  // =========================================================
 
   const toggleResource = (resource) => {
     setResources((prev) => ({
@@ -71,20 +85,6 @@ function EmergencyRequest() {
   // =========================================================
   // LOCATION
   // =========================================================
-
-  /*
-    Current location flow:
-
-    Browser GPS
-       ↓
-    latitude + longitude
-       ↓
-    Reverse geocoding using OpenStreetMap Nominatim
-       ↓
-    address + city + state + pincode
-       ↓
-    Backend emergency request
-  */
 
   const useCurrentLocation = () => {
     setLocationError("");
@@ -110,11 +110,6 @@ function EmergencyRequest() {
         });
 
         try {
-          /*
-            Reverse geocoding:
-            Converts latitude/longitude into a readable address.
-          */
-
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&addressdetails=1`,
             {
@@ -125,7 +120,9 @@ function EmergencyRequest() {
           );
 
           if (!response.ok) {
-            throw new Error("Unable to identify your address.");
+            throw new Error(
+              "Unable to identify your address."
+            );
           }
 
           const data = await response.json();
@@ -150,16 +147,6 @@ function EmergencyRequest() {
           const detectedPincode =
             address.postcode || "";
 
-          /*
-            Backend requires:
-            requestAddress
-            city
-            state
-            pincode
-            latitude
-            longitude
-          */
-
           setRequestAddress(readableAddress);
           setManualLocation(readableAddress);
           setCity(detectedCity);
@@ -168,12 +155,6 @@ function EmergencyRequest() {
 
           setLocationMode("current");
           setLocationLoading(false);
-
-          /*
-            If some required address information could not
-            be detected, show a useful message instead of
-            silently sending bad data to backend.
-          */
 
           if (
             !detectedCity ||
@@ -185,13 +166,12 @@ function EmergencyRequest() {
             );
           }
         } catch (error) {
+          console.error(
+            "Reverse geocoding error:",
+            error
+          );
+
           setLocationLoading(false);
-
-          /*
-            We still keep the GPS coordinates because they
-            were successfully detected.
-          */
-
           setLocationMode("current");
 
           setLocationError(
@@ -231,7 +211,7 @@ function EmergencyRequest() {
   };
 
   // =========================================================
-  // MANUAL LOCATION FALLBACK
+  // MANUAL LOCATION
   // =========================================================
 
   const handleManualLocation = (e) => {
@@ -240,18 +220,7 @@ function EmergencyRequest() {
     setManualLocation(value);
     setRequestAddress(value);
 
-    /*
-      IMPORTANT:
-      Do NOT clear coordinates here.
-
-      User may first click:
-      "Use My Current Location"
-
-      and then edit the address.
-
-      The GPS coordinates should remain available.
-    */
-
+    // Keep GPS coordinates if already detected.
     setLocationMode("manual");
     setLocationError("");
     setSubmitError("");
@@ -313,35 +282,35 @@ function EmergencyRequest() {
     const details = [];
 
     if (emergencyType) {
-      details.push(`Emergency Type: ${emergencyType}`);
+      details.push(
+        `Emergency Type: ${emergencyType}`
+      );
     }
 
     if (priority) {
       details.push(`Priority: ${priority}`);
     }
 
-    // Blood
     if (resources.blood) {
       details.push(
         `Blood Required: ${bloodGroup}, ${bloodUnits} unit(s)`
       );
     }
 
-    // ICU
     if (resources.icu) {
       details.push(
         `ICU Beds Required: ${icuBeds}`
       );
     }
 
-    // Oxygen
     if (resources.oxygen) {
       details.push(
-        `Oxygen Requirement: ${oxygenRequirement || "Not specified"}`
+        `Oxygen Requirement: ${
+          oxygenRequirement || "Not specified"
+        }`
       );
     }
 
-    // Ambulance
     if (resources.ambulance) {
       details.push(
         `Ambulance Pickup: ${
@@ -366,347 +335,90 @@ function EmergencyRequest() {
   };
 
   // =========================================================
-  // PROVIDER DISPATCH HELPERS
+  // GET ITEM ID
   // =========================================================
 
-  const getArrayFromResponse = (data, keys = []) => {
-    for (const key of keys) {
-      if (Array.isArray(data?.[key])) {
-        return data[key];
-      }
-    }
-
-    if (Array.isArray(data)) {
-      return data;
-    }
-
-    if (Array.isArray(data?.data)) {
-      return data.data;
-    }
-
-    return [];
-  };
-
-  const getItemId = (item) =>
-    item?.id ||
-    item?.itemId ||
-    item?.emergencyRequestItemId ||
-    item?.emergency_request_item_id;
-
-  const getProviderId = (provider, providerType) => {
-    if (!provider) return null;
-
-    if (providerType === "BLOOD_BANK") {
-      return (
-        provider?.blood_bank_id ||
-        provider?.bloodBankId ||
-        provider?.providerId ||
-        provider?.provider_id ||
-        provider?.bloodBank?.id ||
-        provider?.blood_bank?.id ||
-        provider?.id ||
-        null
-      );
-    }
-
-    if (providerType === "HOSPITAL") {
-      return (
-        provider?.hospital_id ||
-        provider?.hospitalId ||
-        provider?.providerId ||
-        provider?.provider_id ||
-        provider?.hospital?.id ||
-        provider?.id ||
-        null
-      );
-    }
-
+  const getItemId = (item) => {
     return (
-      provider?.providerId ||
-      provider?.provider_id ||
-      provider?.id ||
+      item?.id ||
+      item?.itemId ||
+      item?.emergencyRequestItemId ||
+      item?.emergency_request_item_id ||
       null
     );
   };
 
-  const dispatchProvidersForItem = async ({
-    item,
+  // =========================================================
+  // FETCH CREATED REQUEST ITEMS
+  // =========================================================
+  /*
+    The create API should return the created request and
+    its emergency_request_item IDs.
+
+    If the create response does not contain complete items,
+    we fetch the request once using requestId.
+
+    IMPORTANT:
+    requestId != itemId
+
+    requestId  -> emergency_requests.id
+    itemId     -> emergency_request_items.id
+  */
+
+  const getCreatedRequestItems = async (
+    createdRequestId,
     token,
-    latitude,
-    longitude,
-  }) => {
-    const itemId = getItemId(item);
-
-    if (!itemId) {
-      return {
-        resourceType: item?.resourceType,
-        sent: 0,
-        message: "Item ID was not returned by the backend.",
-      };
-    }
-
-    const resourceType = String(
-      item?.resourceType || item?.resource_type || ""
-    ).toUpperCase();
-
-    // Ambulance search/provider lookup is not part of the confirmed
-    // frontend API contract, so do not invent an endpoint here.
-    if (resourceType === "AMBULANCE") {
-      return {
-        resourceType,
-        sent: 0,
-        skipped: true,
-        message:
-          "Ambulance provider dispatch is waiting for the confirmed ambulance search API.",
-      };
-    }
-
-    let searchUrl = "";
-    let searchBody = {};
-    let providerType = "";
-    let providerListKeys = [];
-
-    if (resourceType === "BLOOD") {
-      searchUrl =
-        "http://localhost:5000/api/resources/blood/search";
-
-      searchBody = {
-        bloodGroup: item?.bloodGroup || bloodGroup,
-        bloodComponent:
-          item?.bloodComponent || "WHOLE_BLOOD",
-        unitsRequired:
-          Number(item?.quantity || bloodUnits || 1),
-        latitude,
-        longitude,
-        radius: 10,
-      };
-
-      providerType = "BLOOD_BANK";
-      providerListKeys = [
-        "bloodBanks",
-        "blood_banks",
-        "resources",
-        "results",
-        "matches",
-      ];
-    } else if (resourceType === "ICU") {
-      searchUrl =
-        "http://localhost:5000/api/resources/icu/search";
-
-      searchBody = {
-        latitude,
-        longitude,
-        radius: 10,
-      };
-
-      providerType = "HOSPITAL";
-      providerListKeys = [
-        "hospitals",
-        "resources",
-        "results",
-        "matches",
-      ];
-    } else if (resourceType === "OXYGEN") {
-      searchUrl =
-        "http://localhost:5000/api/resources/oxygen/search";
-
-      searchBody = {
-        latitude,
-        longitude,
-        radius: 10,
-      };
-
-      providerType = "HOSPITAL";
-      providerListKeys = [
-        "hospitals",
-        "resources",
-        "results",
-        "matches",
-      ];
-    } else {
-      return {
-        resourceType,
-        sent: 0,
-        message: "No provider search is configured for this resource.",
-      };
-    }
-
-    const searchResponse = await fetch(searchUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(searchBody),
-    });
-
-    const searchData = await searchResponse.json();
-
-    if (!searchResponse.ok) {
-      throw new Error(
-        searchData?.message ||
-          searchData?.error ||
-          `Unable to search providers for ${resourceType}.`
-      );
-    }
-
-    const providers = getArrayFromResponse(
-      searchData,
-      providerListKeys
-    );
-
-    const providerIds = [
-      ...new Set(
-        providers
-          .map((provider) =>
-            getProviderId(provider, providerType)
-          )
-          .filter(Boolean)
-      ),
-    ].slice(0, 3);
-
-    if (providerIds.length === 0) {
-      return {
-        resourceType,
-        sent: 0,
-        message: `No suitable ${
-          providerType === "BLOOD_BANK"
-            ? "blood bank"
-            : "hospital"
-        } provider found nearby.`,
-      };
-    }
-
-    const dispatchResponse = await fetch(
-      `http://localhost:5000/api/emergency-requests/items/${itemId}/providers`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          providers: providerIds.map((providerId) => ({
-            providerType,
-            providerId: Number(providerId),
-          })),
-        }),
-      }
-    );
-
-    const dispatchData = await dispatchResponse.json();
-
-    if (!dispatchResponse.ok) {
-      throw new Error(
-        dispatchData?.message ||
-          dispatchData?.error ||
-          `Unable to send ${resourceType} request to providers.`
-      );
-    }
-
-    return {
-      resourceType,
-      sent: providerIds.length,
-      providerType,
-      providerIds,
-      message: `Request sent to ${providerIds.length} nearby ${
-        providerType === "BLOOD_BANK"
-          ? "blood bank(s)"
-          : "hospital(s)"
-      }.`,
-    };
-  };
-
-  const dispatchEmergencyRequest = async ({
-    requestId: createdRequestId,
-    createdItems,
-    token,
-  }) => {
-    let itemsForDispatch = Array.isArray(createdItems)
-      ? createdItems
+    fallbackItems
+  ) => {
+    let items = Array.isArray(fallbackItems)
+      ? fallbackItems
       : [];
 
-    // The create response may not include full item IDs.
-    // Fetch the created request once so every item has its real itemId.
-    if (
-      itemsForDispatch.length === 0 ||
-      itemsForDispatch.some((item) => !getItemId(item))
-    ) {
-      const requestResponse = await fetch(
+    const hasAllItemIds =
+      items.length > 0 &&
+      items.every((item) => Boolean(getItemId(item)));
+
+    if (hasAllItemIds) {
+      return items;
+    }
+
+    try {
+      const response = await fetch(
         `http://localhost:5000/api/emergency-requests/${createdRequestId}`,
         {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      const requestData = await requestResponse.json();
+      const data = await response.json();
 
-      if (requestResponse.ok) {
-        itemsForDispatch =
-          requestData?.request?.items ||
-          requestData?.request?.resources ||
-          requestData?.items ||
-          requestData?.resources ||
-          itemsForDispatch;
+      if (!response.ok) {
+        return items;
       }
-    }
 
-    const results = [];
+      const fetchedItems =
+        data?.request?.items ||
+        data?.request?.resources ||
+        data?.items ||
+        data?.resources ||
+        [];
 
-    for (const item of itemsForDispatch) {
-      try {
-        const result = await dispatchProvidersForItem({
-          item,
-          token,
-          latitude: coordinates.latitude,
-          longitude: coordinates.longitude,
-        });
-
-        results.push(result);
-      } catch (error) {
-        console.error(
-          `Provider dispatch failed for ${item?.resourceType}:`,
-          error
-        );
-
-        results.push({
-          resourceType: item?.resourceType,
-          sent: 0,
-          message:
-            error.message ||
-            "Unable to dispatch this resource request.",
-        });
+      if (Array.isArray(fetchedItems)) {
+        return fetchedItems;
       }
+
+      return items;
+    } catch (error) {
+      console.error(
+        "Unable to fetch created request items:",
+        error
+      );
+
+      return items;
     }
-
-    const sentCount = results.reduce(
-      (total, result) => total + Number(result.sent || 0),
-      0
-    );
-
-    const failedOrUnavailable = results.filter(
-      (result) =>
-        !result.skipped &&
-        Number(result.sent || 0) === 0
-    ).length;
-
-    if (sentCount > 0) {
-      setProviderDispatchStatus(
-        `Request sent to ${sentCount} provider(s). They can now respond to the emergency request.`
-      );
-    } else if (failedOrUnavailable > 0) {
-      setProviderDispatchStatus(
-        "Emergency request was created, but no matching provider could be notified yet."
-      );
-    } else {
-      setProviderDispatchStatus(
-        "Emergency request created successfully."
-      );
-    }
-
-    return results;
   };
 
   // =========================================================
@@ -720,9 +432,12 @@ function EmergencyRequest() {
     setLoading(true);
 
     try {
-      // ---------------- TOKEN ----------------
+      // =====================================================
+      // TOKEN
+      // =====================================================
 
-      const token = sessionStorage.getItem("medreachToken");
+      const token =
+        sessionStorage.getItem("medreachToken");
 
       if (!token) {
         throw new Error(
@@ -730,7 +445,9 @@ function EmergencyRequest() {
         );
       }
 
-      // ---------------- RESOURCE VALIDATION ----------------
+      // =====================================================
+      // RESOURCE VALIDATION
+      // =====================================================
 
       const selectedResourceCount =
         Object.values(resources).filter(Boolean).length;
@@ -741,7 +458,9 @@ function EmergencyRequest() {
         );
       }
 
-      // ---------------- LOCATION VALIDATION ----------------
+      // =====================================================
+      // LOCATION VALIDATION
+      // =====================================================
 
       if (
         coordinates.latitude === null ||
@@ -776,7 +495,9 @@ function EmergencyRequest() {
         );
       }
 
-      // ---------------- BLOOD VALIDATION ----------------
+      // =====================================================
+      // BLOOD VALIDATION
+      // =====================================================
 
       if (resources.blood) {
         if (!bloodGroup) {
@@ -795,7 +516,9 @@ function EmergencyRequest() {
         }
       }
 
-      // ---------------- ICU VALIDATION ----------------
+      // =====================================================
+      // ICU VALIDATION
+      // =====================================================
 
       if (resources.icu) {
         if (
@@ -808,7 +531,9 @@ function EmergencyRequest() {
         }
       }
 
-      // ---------------- OXYGEN VALIDATION ----------------
+      // =====================================================
+      // OXYGEN VALIDATION
+      // =====================================================
 
       if (resources.oxygen) {
         if (!oxygenRequirement.trim()) {
@@ -818,7 +543,9 @@ function EmergencyRequest() {
         }
       }
 
-      // ---------------- AMBULANCE VALIDATION ----------------
+      // =====================================================
+      // AMBULANCE VALIDATION
+      // =====================================================
 
       if (resources.ambulance) {
         if (!ambulancePickup.trim()) {
@@ -834,7 +561,9 @@ function EmergencyRequest() {
         }
       }
 
-      // ---------------- BUILD ITEMS ----------------
+      // =====================================================
+      // BUILD ITEMS
+      // =====================================================
 
       const items = buildItems();
 
@@ -844,11 +573,21 @@ function EmergencyRequest() {
         );
       }
 
-      // ---------------- DESCRIPTION ----------------
+      // =====================================================
+      // DESCRIPTION
+      // =====================================================
 
       const description = buildDescription();
 
-      // ---------------- BACKEND PAYLOAD ----------------
+      // =====================================================
+      // BACKEND PAYLOAD
+      // =====================================================
+      /*
+        IMPORTANT:
+        Your current working backend expects `resources`.
+
+        Do NOT change this back to `items`.
+      */
 
       const payload = {
         requestAddress: requestAddress.trim(),
@@ -861,7 +600,6 @@ function EmergencyRequest() {
 
         description: description,
 
-        // IMPORTANT: current backend expects `resources`, not `items`.
         resources: items,
       };
 
@@ -870,7 +608,9 @@ function EmergencyRequest() {
         payload
       );
 
-      // ---------------- API CALL ----------------
+      // =====================================================
+      // CREATE EMERGENCY REQUEST
+      // =====================================================
 
       const response = await fetch(
         "http://localhost:5000/api/emergency-requests",
@@ -893,17 +633,21 @@ function EmergencyRequest() {
         data
       );
 
-      // ---------------- API ERROR ----------------
+      // =====================================================
+      // API ERROR
+      // =====================================================
 
       if (!response.ok) {
         throw new Error(
-          data.message ||
-            data.error ||
+          data?.message ||
+            data?.error ||
             "Unable to create emergency request."
         );
       }
 
-      // ---------------- REQUEST ID ----------------
+      // =====================================================
+      // REQUEST ID
+      // =====================================================
 
       const createdRequestId =
         data?.request?.id ||
@@ -916,38 +660,71 @@ function EmergencyRequest() {
         );
       }
 
-      // ---------------- RESPONSE ITEMS ----------------
+      // =====================================================
+      // CREATED ITEMS
+      // =====================================================
 
-      const createdItems =
+      const responseItems =
         data?.request?.items ||
         data?.request?.resources ||
         data?.items ||
         data?.resources ||
-        items;
+        [];
 
-      // ---------------- SAVE REQUEST ----------------
+      const finalItems =
+        await getCreatedRequestItems(
+          createdRequestId,
+          token,
+          responseItems.length > 0
+            ? responseItems
+            : items
+        );
+
+      // =====================================================
+      // SAVE REQUEST DATA
+      // =====================================================
+      /*
+        This is important for the next screens.
+
+        Find Blood / Find ICU / Find Oxygen will use
+        these item IDs to call:
+
+        POST /emergency-requests/items/:itemId/providers
+      */
+
+      const emergencyRequestData = {
+        requestId: createdRequestId,
+
+        items: finalItems,
+
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+
+        requestAddress: requestAddress.trim(),
+        city: city.trim(),
+        state: state.trim(),
+        pincode: pincode.trim(),
+
+        emergencyType,
+        priority,
+      };
 
       sessionStorage.setItem(
         "medreachLastEmergencyRequest",
-        JSON.stringify({
-          requestId: createdRequestId,
-          items: createdItems,
-        })
+        JSON.stringify(emergencyRequestData)
       );
 
-      // ---------------- DISPATCH TO PROVIDERS ----------------
+      console.log(
+        "Saved emergency request for resource-specific provider flow:",
+        emergencyRequestData
+      );
 
-      // The emergency request must exist first because the provider
-      // dispatch API needs the emergency_request_item.id.
-      await dispatchEmergencyRequest({
-        requestId: createdRequestId,
-        createdItems,
-        token,
-      });
-
-      // ---------------- SHOW SUCCESS ----------------
+      // =====================================================
+      // SAVE LOCAL STATE
+      // =====================================================
 
       setRequestId(createdRequestId);
+      setCreatedItems(finalItems);
       setSubmitted(true);
     } catch (error) {
       console.error(
@@ -956,11 +733,57 @@ function EmergencyRequest() {
       );
 
       setSubmitError(
-        error.message ||
+        error?.message ||
           "Unable to create emergency request."
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  // =========================================================
+  // RESOURCE DISPLAY HELPERS
+  // =========================================================
+
+  const getResourceLabel = (resourceType) => {
+    switch (
+      String(resourceType || "").toUpperCase()
+    ) {
+      case "BLOOD":
+        return "Blood";
+
+      case "ICU":
+        return "ICU Bed";
+
+      case "OXYGEN":
+        return "Oxygen";
+
+      case "AMBULANCE":
+        return "Ambulance";
+
+      default:
+        return "Medical Resource";
+    }
+  };
+
+  const getResourceIcon = (resourceType) => {
+    switch (
+      String(resourceType || "").toUpperCase()
+    ) {
+      case "BLOOD":
+        return "🩸";
+
+      case "ICU":
+        return "🏥";
+
+      case "OXYGEN":
+        return "🫁";
+
+      case "AMBULANCE":
+        return "🚑";
+
+      default:
+        return "⚕️";
     }
   };
 
@@ -970,104 +793,161 @@ function EmergencyRequest() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
-        <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-10 text-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6 py-10">
 
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
-            ✓
-          </div>
+        <div className="w-full max-w-3xl bg-white rounded-2xl shadow-lg p-8 md:p-10">
 
-          <h1 className="text-3xl font-bold text-slate-900">
-            Emergency Request Created
-          </h1>
+          {/* SUCCESS ICON */}
 
-          <p className="text-slate-600 mt-3">
-            MedReach is now processing your emergency
-            resource request.
-          </p>
+          <div className="text-center">
 
-          {providerDispatchStatus && (
-            <div className="mt-5 p-4 rounded-xl bg-blue-50 border border-blue-200 text-left">
-              <p className="font-semibold text-blue-900">
-                Provider Dispatch
-              </p>
-              <p className="text-sm text-blue-800 mt-1">
-                {providerDispatchStatus}
-              </p>
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+              ✓
             </div>
-          )}
+
+            <h1 className="text-3xl font-bold text-slate-900">
+              Emergency Request Created
+            </h1>
+
+            <p className="text-slate-600 mt-3">
+              Your emergency request has been created
+              successfully.
+            </p>
+
+          </div>
 
           {/* REQUEST ID */}
 
-          <div className="bg-slate-50 rounded-xl p-5 mt-8">
+          <div className="bg-slate-50 rounded-xl p-5 mt-8 text-center">
+
             <p className="text-sm text-slate-500">
-              Request ID
+              Emergency Request ID
             </p>
 
             <p className="text-2xl font-bold text-red-600 mt-1">
               #{requestId}
             </p>
+
           </div>
 
-          {/* STATUS */}
+          {/* RESOURCE ITEMS */}
 
-          <div className="text-left mt-8 space-y-4">
+          <div className="mt-8">
 
-            <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">
+              Required Resources
+            </h2>
 
-              <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                ✓
-              </div>
+            <div className="space-y-4">
 
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Request Created
-                </p>
+              {createdItems.length > 0 ? (
+                createdItems.map((item, index) => {
 
-                <p className="text-sm text-slate-500">
-                  Your emergency request has been
-                  received.
-                </p>
-              </div>
+                  const resourceType =
+                    item?.resourceType ||
+                    item?.resource_type ||
+                    "";
+
+                  const itemId =
+                    getItemId(item);
+
+                  return (
+                    <div
+                      key={
+                        itemId ||
+                        `${resourceType}-${index}`
+                      }
+                      className="border border-slate-200 rounded-xl p-5"
+                    >
+
+                      <div className="flex items-center justify-between gap-4">
+
+                        <div className="flex items-center gap-3">
+
+                          <div className="w-11 h-11 bg-red-50 rounded-full flex items-center justify-center text-xl">
+                            {getResourceIcon(
+                              resourceType
+                            )}
+                          </div>
+
+                          <div>
+
+                            <h3 className="font-bold text-slate-900">
+                              {getResourceLabel(
+                                resourceType
+                              )}
+                            </h3>
+
+                            <p className="text-sm text-slate-500 mt-1">
+
+                              {resourceType ===
+                                "BLOOD" &&
+                                `${item?.bloodGroup || bloodGroup} • ${item?.quantity || bloodUnits} unit(s)`}
+
+                              {resourceType ===
+                                "ICU" &&
+                                `${item?.quantity || icuBeds} bed(s)`}
+
+                              {resourceType ===
+                                "OXYGEN" &&
+                                "Oxygen support required"}
+
+                              {resourceType ===
+                                "AMBULANCE" &&
+                                "Emergency transportation"}
+
+                            </p>
+
+                          </div>
+
+                        </div>
+
+                        <span className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-full text-xs font-semibold whitespace-nowrap">
+                          PENDING
+                        </span>
+
+                      </div>
+
+                      {itemId && (
+                        <p className="text-xs text-slate-400 mt-4">
+                          Resource Item ID: #{itemId}
+                        </p>
+                      )}
+
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="border border-yellow-200 bg-yellow-50 rounded-xl p-4">
+
+                  <p className="text-sm text-yellow-800">
+                    The emergency request was created,
+                    but the resource item details could
+                    not be loaded yet.
+                  </p>
+
+                </div>
+              )}
 
             </div>
 
-            <div className="flex items-center gap-4">
+          </div>
 
-              <div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
-                🔄
-              </div>
+          {/* NEXT STEP */}
 
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Searching Resources
-                </p>
+          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-5">
 
-                <p className="text-sm text-slate-500">
-                  MedReach can now search for the
-                  required resources.
-                </p>
-              </div>
+            <p className="font-semibold text-blue-900">
+              What happens next?
+            </p>
 
-            </div>
-
-            <div className="flex items-center gap-4 opacity-50">
-
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                3
-              </div>
-
-              <div>
-                <p className="font-semibold text-slate-900">
-                  Resources Confirmed
-                </p>
-
-                <p className="text-sm text-slate-500">
-                  Waiting for provider confirmation.
-                </p>
-              </div>
-
-            </div>
+            <p className="text-sm text-blue-800 mt-1 leading-relaxed">
+              Each required resource will be handled
+              separately. Blood, ICU, Oxygen and
+              Ambulance resources can be searched and
+              sent to suitable providers using their
+              individual resource item.
+            </p>
 
           </div>
 
@@ -1079,7 +959,7 @@ function EmergencyRequest() {
               to={`/user/request-tracking?requestId=${requestId}`}
               className="px-8 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition text-center"
             >
-              Track Request
+              View Request Tracking
             </Link>
 
             <Link
@@ -1092,6 +972,7 @@ function EmergencyRequest() {
           </div>
 
         </div>
+
       </div>
     );
   }
@@ -1103,7 +984,9 @@ function EmergencyRequest() {
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* ================= HEADER ================= */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <header className="bg-white border-b border-slate-200">
 
@@ -1119,7 +1002,8 @@ function EmergencyRequest() {
             </div>
 
             <h1 className="text-2xl font-bold text-slate-900">
-              Med<span className="text-red-600">
+              Med
+              <span className="text-red-600">
                 Reach
               </span>
             </h1>
@@ -1137,7 +1021,9 @@ function EmergencyRequest() {
 
       </header>
 
-      {/* ================= MAIN ================= */}
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
       <main className="max-w-5xl mx-auto px-6 py-10">
 
@@ -1153,8 +1039,8 @@ function EmergencyRequest() {
 
           <p className="text-slate-600 mt-2">
             Select all medical resources you need.
-            MedReach will coordinate them through
-            one emergency request.
+            MedReach will create separate resource
+            items for your emergency request.
           </p>
 
         </div>
@@ -1187,7 +1073,9 @@ function EmergencyRequest() {
                 <select
                   value={emergencyType}
                   onChange={(e) =>
-                    setEmergencyType(e.target.value)
+                    setEmergencyType(
+                      e.target.value
+                    )
                   }
                   required
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500"
@@ -1228,7 +1116,9 @@ function EmergencyRequest() {
                 <select
                   value={priority}
                   onChange={(e) =>
-                    setPriority(e.target.value)
+                    setPriority(
+                      e.target.value
+                    )
                   }
                   required
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500"
@@ -1254,9 +1144,7 @@ function EmergencyRequest() {
 
               </div>
 
-              {/* =================================================
-                  LOCATION
-              ================================================= */}
+              {/* LOCATION */}
 
               <div className="md:col-span-2">
 
@@ -1266,7 +1154,7 @@ function EmergencyRequest() {
 
                 <div className="border border-slate-300 rounded-xl p-5 bg-white">
 
-                  {/* CURRENT LOCATION PRIMARY OPTION */}
+                  {/* CURRENT LOCATION */}
 
                   <button
                     type="button"
@@ -1331,7 +1219,7 @@ function EmergencyRequest() {
                     </div>
                   )}
 
-                  {/* DETECTED LOCATION DETAILS */}
+                  {/* DETECTED LOCATION */}
 
                   {locationMode === "current" &&
                     coordinates.latitude !== null &&
@@ -1350,11 +1238,12 @@ function EmergencyRequest() {
 
                         </div>
 
-                        {/* AUTO DETECTED FIELDS */}
-
                         <div className="grid md:grid-cols-3 gap-4">
 
+                          {/* CITY */}
+
                           <div>
+
                             <label className="block text-xs font-medium text-slate-500 mb-1">
                               City
                             </label>
@@ -1363,13 +1252,19 @@ function EmergencyRequest() {
                               type="text"
                               value={city}
                               onChange={(e) =>
-                                setCity(e.target.value)
+                                setCity(
+                                  e.target.value
+                                )
                               }
                               className="w-full px-3 py-2.5 border border-slate-300 rounded-lg"
                             />
+
                           </div>
 
+                          {/* STATE */}
+
                           <div>
+
                             <label className="block text-xs font-medium text-slate-500 mb-1">
                               State
                             </label>
@@ -1378,13 +1273,19 @@ function EmergencyRequest() {
                               type="text"
                               value={state}
                               onChange={(e) =>
-                                setState(e.target.value)
+                                setState(
+                                  e.target.value
+                                )
                               }
                               className="w-full px-3 py-2.5 border border-slate-300 rounded-lg"
                             />
+
                           </div>
 
+                          {/* PINCODE */}
+
                           <div>
+
                             <label className="block text-xs font-medium text-slate-500 mb-1">
                               Pincode
                             </label>
@@ -1393,11 +1294,14 @@ function EmergencyRequest() {
                               type="text"
                               value={pincode}
                               onChange={(e) =>
-                                setPincode(e.target.value)
+                                setPincode(
+                                  e.target.value
+                                )
                               }
                               maxLength="6"
                               className="w-full px-3 py-2.5 border border-slate-300 rounded-lg"
                             />
+
                           </div>
 
                         </div>
@@ -1422,7 +1326,9 @@ function EmergencyRequest() {
                   <input
                     type="text"
                     value={manualLocation}
-                    onChange={handleManualLocation}
+                    onChange={
+                      handleManualLocation
+                    }
                     placeholder="Enter emergency address manually if needed..."
                     className="w-full px-4 py-3 border border-slate-200 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
                   />
@@ -1432,7 +1338,10 @@ function EmergencyRequest() {
                   {locationMode === "manual" && (
                     <div className="grid md:grid-cols-3 gap-4 mt-4">
 
+                      {/* CITY */}
+
                       <div>
+
                         <label className="block text-xs font-medium text-slate-500 mb-1">
                           City
                         </label>
@@ -1441,14 +1350,20 @@ function EmergencyRequest() {
                           type="text"
                           value={city}
                           onChange={(e) =>
-                            setCity(e.target.value)
+                            setCity(
+                              e.target.value
+                            )
                           }
                           placeholder="City"
                           className="w-full px-3 py-2.5 border border-slate-300 rounded-lg"
                         />
+
                       </div>
 
+                      {/* STATE */}
+
                       <div>
+
                         <label className="block text-xs font-medium text-slate-500 mb-1">
                           State
                         </label>
@@ -1457,14 +1372,20 @@ function EmergencyRequest() {
                           type="text"
                           value={state}
                           onChange={(e) =>
-                            setState(e.target.value)
+                            setState(
+                              e.target.value
+                            )
                           }
                           placeholder="State"
                           className="w-full px-3 py-2.5 border border-slate-300 rounded-lg"
                         />
+
                       </div>
 
+                      {/* PINCODE */}
+
                       <div>
+
                         <label className="block text-xs font-medium text-slate-500 mb-1">
                           Pincode
                         </label>
@@ -1473,12 +1394,15 @@ function EmergencyRequest() {
                           type="text"
                           value={pincode}
                           onChange={(e) =>
-                            setPincode(e.target.value)
+                            setPincode(
+                              e.target.value
+                            )
                           }
                           placeholder="Pincode"
                           maxLength="6"
                           className="w-full px-3 py-2.5 border border-slate-300 rounded-lg"
                         />
+
                       </div>
 
                     </div>
@@ -1547,12 +1471,15 @@ function EmergencyRequest() {
                     </div>
 
                     <p className="text-sm text-slate-500 mt-1">
-                      Request compatible blood from nearby
-                      verified donors or blood banks.
+                      Request compatible blood from
+                      nearby verified donors or blood
+                      banks.
                     </p>
 
                     {resources.blood && (
                       <div className="grid sm:grid-cols-2 gap-4 mt-5">
+
+                        {/* BLOOD GROUP */}
 
                         <div>
 
@@ -1605,6 +1532,8 @@ function EmergencyRequest() {
                           </select>
 
                         </div>
+
+                        {/* BLOOD UNITS */}
 
                         <div>
 
@@ -1674,7 +1603,8 @@ function EmergencyRequest() {
                     </div>
 
                     <p className="text-sm text-slate-500 mt-1">
-                      Find hospitals with available ICU beds.
+                      Find hospitals with available
+                      ICU beds.
                     </p>
 
                     {resources.icu && (
@@ -1689,7 +1619,9 @@ function EmergencyRequest() {
                           min="1"
                           value={icuBeds}
                           onChange={(e) =>
-                            setIcuBeds(e.target.value)
+                            setIcuBeds(
+                              e.target.value
+                            )
                           }
                           placeholder="Number of beds"
                           className="w-full sm:w-1/2 px-3 py-2.5 border border-slate-300 rounded-lg"
@@ -1742,8 +1674,8 @@ function EmergencyRequest() {
                     </div>
 
                     <p className="text-sm text-slate-500 mt-1">
-                      Request oxygen support from available
-                      medical facilities.
+                      Request oxygen support from
+                      available medical facilities.
                     </p>
 
                     {resources.oxygen && (
@@ -1812,12 +1744,14 @@ function EmergencyRequest() {
                     </div>
 
                     <p className="text-sm text-slate-500 mt-1">
-                      Request an available ambulance for
-                      emergency transportation.
+                      Request an available ambulance
+                      for emergency transportation.
                     </p>
 
                     {resources.ambulance && (
                       <div className="grid sm:grid-cols-2 gap-4 mt-5">
+
+                        {/* PICKUP */}
 
                         <div>
 
@@ -1838,6 +1772,8 @@ function EmergencyRequest() {
                           />
 
                         </div>
+
+                        {/* DESTINATION */}
 
                         <div>
 
@@ -1886,7 +1822,9 @@ function EmergencyRequest() {
               rows="5"
               value={additionalInfo}
               onChange={(e) =>
-                setAdditionalInfo(e.target.value)
+                setAdditionalInfo(
+                  e.target.value
+                )
               }
               placeholder="Describe the emergency or provide any additional information..."
               className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 resize-none"
@@ -1919,8 +1857,9 @@ function EmergencyRequest() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
 
             <p className="text-sm text-slate-500">
-              Your request will be shared with relevant
-              verified medical resources.
+              Your request will create individual
+              resource items that can be handled
+              separately.
             </p>
 
             <button
@@ -1930,7 +1869,7 @@ function EmergencyRequest() {
             >
 
               {loading
-                ? "Creating & Notifying Providers..."
+                ? "Creating Emergency Request..."
                 : "🚨 Send Emergency Request"}
 
             </button>

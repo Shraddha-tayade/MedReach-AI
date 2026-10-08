@@ -20,6 +20,7 @@ function Login() {
     hospital: "HOSPITAL",
     bloodbank: "BLOOD_BANK",
     ambulance: "AMBULANCE",
+    admin: "ADMIN",
   };
 
   const handleLogin = async (e) => {
@@ -31,6 +32,32 @@ function Login() {
     try {
       const type = roleTypeMap[role];
 
+      let requestBody;
+
+      // ================= ADMIN =================
+      if (role === "admin") {
+        requestBody = {
+          username: identifier,
+          password: password,
+        };
+      }
+
+      // ================= USER / DONOR =================
+      else if (role === "patient" || role === "donor") {
+        requestBody = {
+          email: identifier,
+          password: password,
+        };
+      }
+
+      // ================= HOSPITAL / BLOOD BANK / AMBULANCE =================
+      else {
+        requestBody = {
+          username: identifier,
+          password: password,
+        };
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/auth/login?type=${type}`,
         {
@@ -38,12 +65,7 @@ function Login() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            [role === "patient" || role === "donor"
-              ? "email"
-              : "username"]: identifier,
-            password: password,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
@@ -55,12 +77,33 @@ function Login() {
         );
       }
 
-      // Save login token
+      // ================= SAVE TOKEN =================
+
       if (data.token) {
-        sessionStorage.setItem("medreachToken", data.token);
+        sessionStorage.setItem(
+          "medreachToken",
+          data.token
+        );
       }
 
-      // Backend returns account, not user
+      // ================= ADMIN =================
+
+      if (role === "admin") {
+        // Admin response does not contain account data.
+        // Store only the admin role.
+        sessionStorage.setItem(
+          "medreachUser",
+          JSON.stringify({
+            type: "ADMIN",
+          })
+        );
+
+        navigate("/admin/dashboard");
+        return;
+      }
+
+      // ================= OTHER ROLES =================
+
       if (data.account) {
         sessionStorage.setItem(
           "medreachUser",
@@ -68,17 +111,18 @@ function Login() {
         );
       }
 
-      // Redirect according to role
+      // ================= REDIRECT =================
+
       if (role === "patient") {
         navigate("/user/dashboard");
       } else if (role === "donor") {
         navigate("/Donor/dashboard");
       } else {
-        // Dashboards for these roles will be connected later
         setError(
           "Login successful, but this role's dashboard is not connected yet."
         );
       }
+
     } catch (err) {
       setError(
         err.message ||
@@ -94,8 +138,10 @@ function Login() {
 
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
 
-        {/* Logo */}
+        {/* ================= LOGO ================= */}
+
         <div className="text-center mb-8">
+
           <h1 className="text-3xl font-bold text-slate-900">
             Med<span className="text-red-600">Reach</span>
           </h1>
@@ -103,19 +149,25 @@ function Login() {
           <p className="text-slate-500 mt-2">
             Welcome back
           </p>
+
         </div>
 
-        {/* Error */}
+
+        {/* ================= ERROR ================= */}
+
         {error && (
           <div className="mb-5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
             {error}
           </div>
         )}
 
+
         <form onSubmit={handleLogin} className="space-y-5">
 
-          {/* Role */}
+          {/* ================= ROLE ================= */}
+
           <div>
+
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Login As
             </label>
@@ -130,6 +182,7 @@ function Login() {
               }}
               className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
             >
+
               <option value="patient">
                 Patient / Family
               </option>
@@ -149,11 +202,20 @@ function Login() {
               <option value="ambulance">
                 Ambulance
               </option>
+
+              <option value="admin">
+                Admin
+              </option>
+
             </select>
+
           </div>
 
-          {/* Email / Username */}
+
+          {/* ================= EMAIL / USERNAME ================= */}
+
           <div>
+
             <label className="block text-sm font-medium text-slate-700 mb-2">
               {role === "patient" || role === "donor"
                 ? "Email Address"
@@ -167,7 +229,9 @@ function Login() {
                   : "text"
               }
               value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              onChange={(e) =>
+                setIdentifier(e.target.value)
+              }
               placeholder={
                 role === "patient" || role === "donor"
                   ? "Enter your email"
@@ -176,10 +240,14 @@ function Login() {
               required
               className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
             />
+
           </div>
 
-          {/* Password */}
+
+          {/* ================= PASSWORD ================= */}
+
           <div>
+
             <div className="flex justify-between items-center mb-2">
 
               <label className="text-sm font-medium text-slate-700">
@@ -198,14 +266,19 @@ function Login() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
               placeholder="Enter your password"
               required
               className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500"
             />
+
           </div>
 
-          {/* Login */}
+
+          {/* ================= LOGIN ================= */}
+
           <button
             type="submit"
             disabled={loading}
@@ -216,26 +289,36 @@ function Login() {
 
         </form>
 
-        {/* Register */}
-        <p className="text-center text-sm text-slate-600 mt-6">
-          Don't have an account?{" "}
 
-          <Link
-            to="/register"
-            className="text-red-600 font-semibold hover:text-red-700"
-          >
-            Register
-          </Link>
-        </p>
+        {/* ================= REGISTER ================= */}
 
-        {/* Back */}
+        {role !== "admin" && (
+          <p className="text-center text-sm text-slate-600 mt-6">
+
+            Don't have an account?{" "}
+
+            <Link
+              to="/register"
+              className="text-red-600 font-semibold hover:text-red-700"
+            >
+              Register
+            </Link>
+
+          </p>
+        )}
+
+
+        {/* ================= BACK ================= */}
+
         <div className="text-center mt-5">
+
           <Link
             to="/"
             className="text-sm text-slate-500 hover:text-red-600 transition"
           >
             ← Back to Home
           </Link>
+
         </div>
 
       </div>
