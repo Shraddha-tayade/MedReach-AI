@@ -1,160 +1,226 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export default function DonorAccepted() {
+function DonorAccepted() {
   const navigate = useNavigate();
-  const routerLocation = useLocation();
 
-  const request = routerLocation.state?.request;
-  const donorLocation = routerLocation.state?.donorLocation;
-  const locationSharingEnabled =
-    routerLocation.state?.locationSharingEnabled === true;
-
-  if (!request) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow p-8 text-center max-w-md w-full">
-          <h2 className="text-xl font-bold text-slate-800">
-            No Request Information
-          </h2>
-          <p className="text-slate-500 mt-2">
-            Please select a request from your donor dashboard.
-          </p>
-          <button
-            onClick={() => navigate("/Donor/dashboard")}
-            className="mt-5 bg-red-600 hover:bg-red-700 text-white rounded-lg px-5 py-3 font-semibold"
-          >
-            Go to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const requestId = request.id || request.requestId || "N/A";
-  const bloodGroup = request.bloodGroup || "N/A";
-  const units = request.units ?? request.unitsRequired ?? 1;
-  const hospital =
-    request.hospital || request.hospitalName || "Hospital details unavailable";
-  const hospitalLocation =
-    request.location || request.hospitalLocation || "Location unavailable";
-  const distance = request.distance || "Not available";
+  const request = {
+    id: "REQ-001",
+    bloodGroup: "O-",
+    units: 2,
+    hospital: "City Care Hospital",
+    location: "Aurangabad",
+    distance: "3.2 km",
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/Donor/dashboard")}
-            className="text-2xl font-extrabold text-red-600"
-          >
-            MedReach
-          </button>
-          <span className="text-sm font-medium text-slate-600">
-            Donor Portal
-          </span>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
 
-      <main className="max-w-4xl mx-auto px-4 py-10">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="bg-green-600 p-8 text-center text-white">
-            <div className="mx-auto w-16 h-16 rounded-full bg-white text-green-600 flex items-center justify-center text-4xl">
-              ✓
+      {/* Back Button */}
+      <button
+        onClick={() => navigate("/Donor/dashboard")}
+        className="mb-6 text-sm font-semibold text-red-600 hover:text-red-700"
+      >
+        ← Back to Dashboard
+      </button>
+
+      {/* Success Message */}
+      <div className="mx-auto max-w-4xl">
+
+        <div className="rounded-2xl bg-green-50 p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl">
+            ✅
+          </div>
+
+          <h1 className="mt-5 text-3xl font-bold text-green-700">
+            Request Accepted!
+          </h1>
+
+          <p className="mt-3 text-slate-600">
+            Thank you for helping someone in an emergency. ❤️‍🩹
+          </p>
+
+          <p className="mt-2 text-sm text-slate-500">
+            Your donation can make a difference.
+          </p>
+        </div>
+
+        {/* Request Information */}
+        <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+
+          <h2 className="text-xl font-bold text-slate-800">
+            🩸 Accepted Request
+          </h2>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+
+            <div className="rounded-xl bg-slate-50 p-5">
+              <p className="text-sm text-slate-500">
+                Request ID
+              </p>
+              <p className="mt-2 font-bold text-slate-800">
+                {request.id}
+              </p>
             </div>
-            <h1 className="text-2xl font-bold mt-4">
-              Request Accepted Successfully!
-            </h1>
-            <p className="mt-2 text-green-100">
-              Thank you for helping someone in need.
+
+            <div className="rounded-xl bg-red-50 p-5">
+              <p className="text-sm text-slate-500">
+                Blood Group
+              </p>
+              <p className="mt-2 text-2xl font-bold text-red-600">
+                {request.bloodGroup}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 p-5">
+              <p className="text-sm text-slate-500">
+                Units Required
+              </p>
+              <p className="mt-2 text-2xl font-bold text-slate-800">
+                {request.units}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 p-5">
+              <p className="text-sm text-slate-500">
+                Distance
+              </p>
+              <p className="mt-2 font-bold text-slate-800">
+                📍 {request.distance}
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Hospital Details */}
+        <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-red-100 text-2xl">
+              🏥
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">
+                {request.hospital}
+              </h2>
+
+              <p className="mt-1 text-slate-500">
+                📍 {request.location}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-xl bg-blue-50 p-5">
+            <p className="font-semibold text-blue-800">
+              📞 Hospital Emergency Desk
+            </p>
+
+            <p className="mt-2 text-sm text-blue-700">
+              Please contact the hospital emergency desk for further
+              donation instructions.
             </p>
           </div>
 
-          <div className="p-6 sm:p-8 space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-slate-800">
-                Accepted Request Details
-              </h2>
-              <p className="text-slate-500 text-sm mt-1">
-                Request ID: {requestId}
-              </p>
-            </div>
+        </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-red-50 rounded-xl p-4">
-                <p className="text-sm text-slate-500">Blood Group</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">
-                  {bloodGroup}
-                </p>
+        {/* Donation Status */}
+        <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+
+          <h2 className="text-xl font-bold text-slate-800">
+            📋 Donation Status
+          </h2>
+
+          <div className="mt-6 space-y-5">
+
+            {/* Step 1 */}
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500 text-white">
+                ✓
               </div>
 
-              <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-sm text-slate-500">Units Required</p>
-                <p className="text-xl font-bold text-slate-800 mt-1">
-                  {units} unit(s)
-                </p>
-              </div>
+              <div>
+                <h3 className="font-bold text-green-700">
+                  Request Accepted
+                </h3>
 
-              <div className="bg-slate-50 rounded-xl p-4 sm:col-span-2">
-                <p className="text-sm text-slate-500">Hospital</p>
-                <p className="text-lg font-bold text-slate-800 mt-1">
-                  {hospital}
-                </p>
-                <p className="text-slate-600 mt-1">
-                  📍 {hospitalLocation}
-                </p>
-                <p className="text-sm text-slate-500 mt-2">
-                  Hospital distance: {distance}
+                <p className="mt-1 text-sm text-slate-500">
+                  You have accepted this emergency blood request.
                 </p>
               </div>
             </div>
 
-            <div className="border border-green-200 bg-green-50 rounded-xl p-5">
-              <h3 className="font-bold text-green-800">
-                Donor Location Status
-              </h3>
+            {/* Step 2 */}
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-yellow-400 text-white">
+                2
+              </div>
 
-              {locationSharingEnabled && donorLocation ? (
-                <>
-                  <p className="text-sm text-green-700 mt-2">
-                    Your current coordinates were received successfully.
-                  </p>
-                  <p className="text-sm text-slate-700 mt-3">
-                    Latitude: {donorLocation.latitude}
-                  </p>
-                  <p className="text-sm text-slate-700 mt-1">
-                    Longitude: {donorLocation.longitude}
-                  </p>
-                </>
-              ) : (
-                <p className="text-sm text-slate-600 mt-2">
-                  Donor coordinates are not available for this request.
+              <div>
+                <h3 className="font-bold text-slate-800">
+                  Donation Pending
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-500">
+                  Waiting for the donation to be completed.
                 </p>
-              )}
-
-              <p className="text-xs text-slate-500 mt-3">
-                Note: These are the coordinates captured when you accepted
-                the request. Continuous live tracking is not enabled.
-              </p>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => navigate("/Donor/dashboard")}
-                className="flex-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold py-3"
-              >
-                Go to Dashboard
-              </button>
+            {/* Step 3 */}
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-500">
+                3
+              </div>
 
-              <button
-                onClick={() => navigate("/Donor/donation-history")}
-                className="flex-1 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-3"
-              >
-                View Donation History
-              </button>
+              <div>
+                <h3 className="font-bold text-slate-500">
+                  Donation Completed
+                </h3>
+
+                <p className="mt-1 text-sm text-slate-400">
+                  This will be updated after the hospital confirms the donation.
+                </p>
+              </div>
             </div>
+
           </div>
         </div>
-      </main>
+
+        {/* Important Note */}
+        <div className="mt-6 rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
+          <h3 className="font-bold text-slate-800">
+            ⚠️ Important
+          </h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Please follow the hospital's instructions and carry a valid
+            identification document when you visit for donation.
+          </p>
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+
+          <button
+            onClick={() => navigate("/Donor/dashboard")}
+            className="rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"
+          >
+            Go to Dashboard
+          </button>
+
+          <button
+            onClick={() => navigate("/Donor/dashboard")}
+            className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            View My Requests
+          </button>
+
+        </div>
+
+      </div>
     </div>
   );
 }
+
+export default DonorAccepted;

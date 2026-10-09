@@ -1,264 +1,388 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-export default function DonorRequestDetails() {
-  const navigate = useNavigate();
-  const routerLocation = useLocation();
+function DonorRequestDetails() {
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  const request = routerLocation.state?.request;
+    const request = location.state?.request;
 
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+    const [showLocationPopup, setShowLocationPopup] = useState(false);
+    const [showAcceptedPopup, setShowAcceptedPopup] = useState(false);
+    const [locationLoading, setLocationLoading] = useState(false);
+    const [locationError, setLocationError] = useState("");
 
-  // If someone opens this page directly without selecting a request
-  if (!request) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow p-8 text-center max-w-md w-full">
-          <h2 className="text-xl font-bold text-slate-800">
-            No Request Selected
-          </h2>
-          <p className="text-slate-500 mt-2">
-            Please select a blood request from your dashboard.
-          </p>
-          <button
-            onClick={() => navigate("/Donor/dashboard")}
-            className="mt-5 rounded-lg bg-red-600 px-5 py-3 text-white font-semibold hover:bg-red-700"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
+    const handleAccept = () => {
+        setLocationError("");
+        setShowLocationPopup(true);
+    };
 
-  const requestId = request.id || request.requestId || "N/A";
-  const bloodGroup = request.bloodGroup || "N/A";
-  const units = request.units ?? request.unitsRequired ?? 1;
-  const hospital =
-    request.hospital || request.hospitalName || "Hospital details unavailable";
-  const hospitalLocation =
-    request.location || request.hospitalLocation || "Location unavailable";
-  const distance = request.distance || "Not available";
-  const priority = request.priority || "Normal";
-  const requestTime = request.requestTime || request.time || "Recently";
+    const handleEnableLocation = () => {
+        if (!navigator.geolocation) {
+            setLocationError(
+                "Location is not supported by this browser."
+            );
+            return;
+        }
 
-  const handleAcceptRequest = () => {
-    setError("");
-    setShowLocationModal(true);
-  };
+        setLocationLoading(true);
+        setLocationError("");
 
-  const handleEnableLocation = () => {
-    setError("");
+        navigator.geolocation.getCurrentPosition(
+            () => {
+                setLocationLoading(false);
+                setShowLocationPopup(false);
+                setShowAcceptedPopup(true);
+            },
+            (error) => {
+                setLocationLoading(false);
 
-    if (!navigator.geolocation) {
-      setError("Your browser does not support location access.");
-      return;
+                if (error.code === 1) {
+                    setLocationError(
+                        "Location permission denied. Please allow location access in your browser settings."
+                    );
+                } else if (error.code === 2) {
+                    setLocationError(
+                        "Your location could not be detected. Please check your device location."
+                    );
+                } else {
+                    setLocationError(
+                        "Location request timed out. Please try again."
+                    );
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0,
+            }
+        );
+    };
+
+    if (!request) {
+        return (
+            <div className="min-h-screen bg-slate-50 p-6">
+                <button
+                    onClick={() => navigate("/Donor/dashboard")}
+                    className="mb-6 text-sm font-semibold text-red-600 hover:text-red-700"
+                >
+                    ← Back to Dashboard
+                </button>
+
+                <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+                    <div className="text-5xl">⚠️</div>
+
+                    <h1 className="mt-4 text-2xl font-bold text-slate-800">
+                        Request Not Found
+                    </h1>
+
+                    <p className="mt-2 text-slate-500">
+                        Please go back to the dashboard and select an
+                        emergency request.
+                    </p>
+                </div>
+            </div>
+        );
     }
 
-    setLoading(true);
+    return (
+        <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
+            {/* Back Button */}
+            <button
+                onClick={() => navigate("/Donor/dashboard")}
+                className="mb-6 text-sm font-semibold text-red-600 hover:text-red-700"
+            >
+                ← Back to Dashboard
+            </button>
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const donorLocation = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
+            {/* Heading */}
+            <div className="mb-6">
+                <p className="text-sm font-semibold uppercase tracking-wide text-red-600">
+                    Emergency Blood Request
+                </p>
 
-        setLoading(false);
-        setShowLocationModal(false);
+                <h1 className="mt-1 text-3xl font-bold text-slate-800">
+                    Request Details 🚨
+                </h1>
 
-        navigate("/Donor/accepted", {
-          state: {
-            request,
-            donorLocation,
-            locationSharingEnabled: true,
-          },
-        });
-      },
-      (locationError) => {
-        setLoading(false);
+                <p className="mt-2 text-slate-600">
+                    Review the emergency request before accepting it.
+                </p>
+            </div>
 
-        if (locationError.code === 1) {
-          setError(
-            "Location permission was denied. Allow location access in your browser to continue."
-          );
-        } else if (locationError.code === 2) {
-          setError("Your current location could not be detected. Please try again.");
-        } else {
-          setError("Location request timed out. Please try again.");
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      }
+            {/* Request Header */}
+            <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p className="text-sm text-slate-500">
+                        Request ID
+                    </p>
+
+                    <p className="mt-1 font-bold text-slate-800">
+                        {request.id}
+                    </p>
+                </div>
+
+                <span
+                    className={`w-fit rounded-full px-4 py-2 text-sm font-bold ${
+                        request.priority === "URGENT"
+                            ? "bg-red-600 text-white"
+                            : "bg-orange-100 text-orange-700"
+                    }`}
+                >
+                    {request.priority} PRIORITY
+                </span>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-3">
+                {/* Main Details */}
+                <div className="rounded-2xl bg-white p-6 shadow-sm lg:col-span-2">
+                    <h2 className="text-xl font-bold text-slate-800">
+                        🩸 Blood Requirement
+                    </h2>
+
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                        <div className="rounded-xl bg-red-50 p-5">
+                            <p className="text-sm text-slate-500">
+                                Required Blood Group
+                            </p>
+
+                            <p className="mt-2 text-3xl font-bold text-red-600">
+                                {request.bloodGroup}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-slate-50 p-5">
+                            <p className="text-sm text-slate-500">
+                                Units Required
+                            </p>
+
+                            <p className="mt-2 text-3xl font-bold text-slate-800">
+                                {request.units}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Emergency Information */}
+                    <h2 className="mt-8 text-xl font-bold text-slate-800">
+                        🚨 Emergency Information
+                    </h2>
+
+                    <div className="mt-5 space-y-4">
+                        <div className="flex flex-col gap-1 border-b border-slate-100 pb-4 sm:flex-row sm:justify-between">
+                            <span className="text-slate-500">
+                                Emergency Type
+                            </span>
+
+                            <span className="font-semibold text-slate-800">
+                                Accident Emergency
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col gap-1 border-b border-slate-100 pb-4 sm:flex-row sm:justify-between">
+                            <span className="text-slate-500">
+                                Request Time
+                            </span>
+
+                            <span className="font-semibold text-slate-800">
+                                {request.time}
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col gap-1 border-b border-slate-100 pb-4 sm:flex-row sm:justify-between">
+                            <span className="text-slate-500">
+                                Priority
+                            </span>
+
+                            <span className="font-semibold text-red-600">
+                                {request.priority}
+                            </span>
+                        </div>
+
+                        <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
+                            <span className="text-slate-500">
+                                Contact
+                            </span>
+
+                            <span className="font-semibold text-slate-800">
+                                Hospital Emergency Desk
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Hospital Details */}
+                <div className="rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-2xl">
+                        🏥
+                    </div>
+
+                    <h2 className="mt-4 text-xl font-bold text-slate-800">
+                        {request.hospital}
+                    </h2>
+
+                    <div className="mt-5 space-y-4">
+                        <div>
+                            <p className="text-sm text-slate-500">
+                                📍 Location
+                            </p>
+
+                            <p className="mt-1 font-semibold text-slate-800">
+                                {request.location}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p className="text-sm text-slate-500">
+                                🚗 Distance
+                            </p>
+
+                            <p className="mt-1 font-semibold text-slate-800">
+                                {request.distance}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-green-50 p-4">
+                            <p className="text-sm font-semibold text-green-700">
+                                📍 Nearby Emergency Request
+                            </p>
+
+                            <p className="mt-1 text-sm text-green-600">
+                                This request is within your nearby service area.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Before Accepting */}
+            <div className="mt-6 rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
+                <h3 className="font-bold text-slate-800">
+                    ⚠️ Before Accepting
+                </h3>
+
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Please make sure that you are available and eligible
+                    to donate before accepting this emergency request.
+                </p>
+            </div>
+
+            {/* Accept Section */}
+            <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+                <h2 className="text-xl font-bold text-slate-800">
+                    Ready to Help?
+                </h2>
+
+                <p className="mt-2 text-slate-600">
+                    By accepting this request, you are confirming that
+                    you can respond to this emergency blood requirement.
+                </p>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                    <button
+                        onClick={handleAccept}
+                        className="rounded-xl bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"
+                    >
+                        ❤️‍🩹 Accept Donation Request
+                    </button>
+
+                    <button
+                        onClick={() => navigate("/Donor/dashboard")}
+                        className="rounded-xl border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+
+            {/* Location Permission Popup */}
+            {showLocationPopup && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-7 text-center shadow-2xl">
+                        <div className="text-5xl">📍</div>
+
+                        <h2 className="mt-4 text-2xl font-bold text-slate-800">
+                            Enable Your Location
+                        </h2>
+
+                        <p className="mt-3 leading-6 text-slate-600">
+                            Please enable location access to continue
+                            accepting this emergency request.
+                        </p>
+
+                        {locationError && (
+                            <p
+                                role="alert"
+                                className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+                            >
+                                {locationError}
+                            </p>
+                        )}
+
+                        <button
+                            onClick={handleEnableLocation}
+                            disabled={locationLoading}
+                            className="mt-6 w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {locationLoading
+                                ? "Checking Location..."
+                                : "📍 Enable Location"}
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setShowLocationPopup(false);
+                                setLocationError("");
+                            }}
+                            disabled={locationLoading}
+                            className="mt-3 w-full rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Accepted Success Popup - Same Page */}
+            {showAcceptedPopup && (
+                <div className="fixed left-1/2 top-5 z-[60] w-[calc(100%-32px)] max-w-md -translate-x-1/2 rounded-2xl border-2 border-green-500 bg-white p-6 text-center shadow-2xl">
+                    <div className="text-5xl">✅</div>
+
+                    <h2 className="mt-3 text-2xl font-bold text-green-700">
+                        Request Accepted Successfully!
+                    </h2>
+
+                    <p className="mt-3 leading-6 text-slate-600">
+                        You have accepted request{" "}
+                        <strong>{request.id}</strong>. Thank you for
+                        helping someone in need!
+                    </p>
+
+                    <div className="mt-5 rounded-xl bg-green-50 p-4 text-left">
+                        <p className="mb-2 text-sm text-slate-600">
+                            <strong>Blood Group:</strong>{" "}
+                            {request.bloodGroup}
+                        </p>
+
+                        <p className="mb-2 text-sm text-slate-600">
+                            <strong>Hospital:</strong>{" "}
+                            {request.hospital}
+                        </p>
+
+                        <p className="text-sm font-semibold text-green-700">
+                            Status: Accepted 
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => setShowAcceptedPopup(false)}
+                        className="mt-5 w-full rounded-xl bg-green-600 px-5 py-3 font-semibold text-white hover:bg-green-700"
+                    >
+                        OK, Continue
+                    </button>
+                </div>
+            )}
+        </div>
     );
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Navbar */}
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/Donor/dashboard")}
-            className="text-2xl font-extrabold text-red-600"
-          >
-
-             <p className="text-xl font-semibold text-red-600">
-              MedReach -Smart Emergency Medical Resource Platform
-            </p>
-          </button>
-        </div>
-      </nav>
-
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <button
-          onClick={() => navigate("/Donor/dashboard")}
-          className="text-red-600 font-semibold hover:text-red-700 mb-6"
-        >
-          ← Back to Dashboard
-        </button>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="bg-red-600 p-6 text-white">
-            <p className="text-sm text-red-100">Emergency Blood Request</p>
-            <h1 className="text-2xl font-bold mt-1">Request Details</h1>
-            <p className="mt-2 text-red-100">
-              Request ID: {requestId}
-            </p>
-          </div>
-
-          <div className="p-6 space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="text-sm text-slate-500">Required Blood Group</p>
-                <p className="text-3xl font-bold text-red-600 mt-1">
-                  {bloodGroup}
-                </p>
-              </div>
-
-              <span
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                  priority.toLowerCase() === "high" ||
-                  priority.toLowerCase() === "urgent" ||
-                  priority.toLowerCase() === "critical"
-                    ? "bg-red-100 text-red-700"
-                    : "bg-amber-100 text-amber-700"
-                }`}
-              >
-                {priority} Priority
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Units Required</p>
-                <p className="font-bold text-slate-800 text-lg mt-1">
-                  {units} unit(s)
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Distance</p>
-                <p className="font-bold text-slate-800 text-lg mt-1">
-                  {distance}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                <p className="text-sm text-slate-500">Hospital</p>
-                <p className="font-bold text-slate-800 text-lg mt-1">
-                  {hospital}
-                </p>
-                <p className="text-slate-600 mt-1">
-                  📍 {hospitalLocation}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                <p className="text-sm text-slate-500">Request Time</p>
-                <p className="font-semibold text-slate-800 mt-1">
-                  {requestTime}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-              <h3 className="font-semibold text-blue-900">
-                Location Permission
-              </h3>
-              <p className="text-sm text-blue-800 mt-1">
-                It will ask your permission to access your current
-                location before you continue.
-              </p>
-            </div>
-
-            {error && (
-              <div
-                role="alert"
-                className="rounded-lg bg-red-50 border border-red-200 text-red-700 p-3 text-sm"
-              >
-                {error}
-              </div>
-            )}
-
-            <button
-              onClick={handleAcceptRequest}
-              className="w-full rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold py-4 transition"
-            >
-              Accept Request
-            </button>
-          </div>
-        </div>
-      </main>
-
-      {/* Location permission modal */}
-      {showLocationModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-            <div className="w-14 h-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-2xl mx-auto">
-              📍
-            </div>
-
-            <h2 className="text-xl font-bold text-slate-800 text-center mt-4">
-              Enable Your Location
-            </h2>
-
-            <p className="text-slate-600 text-center mt-2">
-              Allow location access to continue with this blood request.
-            </p>
-
-            {error && (
-              <p role="alert" className="text-red-600 text-sm mt-3 text-center">
-                {error}
-              </p>
-            )}
-
-            <button
-              disabled={loading}
-              onClick={handleEnableLocation}
-              className="w-full mt-6 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-semibold rounded-lg py-3"
-            >
-              {loading ? "Getting Location..." : "Enable Location"}
-            </button>
-
-            <button
-              disabled={loading}
-              onClick={() => {
-                setShowLocationModal(false);
-                setError("");
-              }}
-              className="w-full mt-3 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg py-3"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
+
+export default DonorRequestDetails;

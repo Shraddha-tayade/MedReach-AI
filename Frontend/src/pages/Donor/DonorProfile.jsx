@@ -8,10 +8,10 @@ function DonorProfile() {
   const [editing, setEditing] = useState(false);
 
   const [profile, setProfile] = useState({
-    name: "Donor",
+    name: "Riya",
     bloodGroup: "O+",
     phone: "9876543210",
-    email: "donor@example.com",
+    email: "riya@gmail.com",
     location: "Aurangabad, Maharashtra",
     lastDonation: "20 Sep 2026",
     nextDonation: "20 Dec 2026",
@@ -26,7 +26,7 @@ function DonorProfile() {
     requestsAccepted: 2,
   };
 
-  // Calculate Reliability Score
+  // Calculate reliability score
   const evaluatedRequests =
     reliabilityStats.completedDonations +
     reliabilityStats.unsuccessfulAcceptedRequests;
@@ -213,6 +213,7 @@ function DonorProfile() {
           </div>
         </div>
 
+        {/* Save Button */}
         {editing && (
           <button
             onClick={handleSave}
@@ -230,6 +231,7 @@ function DonorProfile() {
         </h2>
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Last Donation */}
           <div className="rounded-xl bg-slate-50 p-5">
             <p className="text-sm text-slate-500">
               Last Donation
@@ -240,6 +242,7 @@ function DonorProfile() {
             </p>
           </div>
 
+          {/* Next Eligible Donation */}
           <div className="rounded-xl bg-green-50 p-5">
             <p className="text-sm text-slate-500">
               Next Eligible Donation
@@ -250,6 +253,7 @@ function DonorProfile() {
             </p>
           </div>
 
+          {/* Total Donations */}
           <div className="rounded-xl bg-red-50 p-5">
             <p className="text-sm text-slate-500">
               Total Donations
@@ -260,6 +264,7 @@ function DonorProfile() {
             </p>
           </div>
 
+          {/* Total Requests */}
           <div className="rounded-xl bg-blue-50 p-5">
             <p className="text-sm text-slate-500">
               Total Requests
@@ -272,9 +277,8 @@ function DonorProfile() {
         </div>
       </div>
 
-      {/* Reliability Score - Green Design */}
+      {/* Reliability Score */}
       <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
-        {/* Heading and Percentage */}
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-slate-800">
@@ -291,7 +295,7 @@ function DonorProfile() {
           </span>
         </div>
 
-        {/* Green Progress Bar */}
+        {/* Progress Bar */}
         <div className="mt-6 h-3 w-full overflow-hidden rounded-full bg-slate-200">
           <div
             className="h-full rounded-full bg-green-500 transition-all duration-500"
@@ -304,42 +308,16 @@ function DonorProfile() {
           ★★★★★
         </div>
 
-        {/* Statistics Cards */}
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl bg-slate-50 p-5">
-            <p className="text-3xl font-bold text-slate-800">
-              {reliabilityStats.completedDonations}
-            </p>
-
-            <p className="mt-1 text-slate-500">
-              Donations Completed
-            </p>
-          </div>
+        {/* Statistics */}
+       
 
           <div className="rounded-2xl bg-slate-50 p-5">
-            <p className="text-3xl font-bold text-slate-800">
-              {reliabilityStats.requestsAccepted}
-            </p>
-
-            <p className="mt-1 text-slate-500">
-              Requests Accepted
-            </p>
+          
           </div>
-        </div>
-
-        {/* Score Calculation Box */}
-        <div className="mt-5 rounded-2xl bg-green-50 p-5 text-green-800">
-          <p>
-            <span className="font-bold">
-              Score Calculation:
-            </span>{" "}
-            {reliabilityStats.completedDonations} completed donations out of{" "}
-            {evaluatedRequests} evaluated requests.
-          </p>
         </div>
 
       </div>
-    </div>
+  
   );
 }
 
